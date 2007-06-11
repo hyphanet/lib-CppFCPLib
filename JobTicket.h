@@ -1,28 +1,39 @@
 #ifndef JOBTICKET_H__
 #define JOBTICKET_H__
 
-#include "Log.h"
 #include "Message.h"
+#include "ServerMessage.h"
+#include "FCPResult.h"
+
+#include <stdexcept>
 #include <vector>
-#include <boost/shared_ptr.hpp>
 #include <iostream>
+
+#include <boost/shared_ptr.hpp>
+
 #include "zthread/FastMutex.h"
 
 namespace FCPLib {
 
 class NodeThread;
 
+
 class JobTicket {
   std::string id;
   Message::MessagePtr cmd;
-  std::vector<Message::MessagePtr> nodeResponse;
-  bool async_;
+
+  std::vector<ServerMessage::ServerMessagePtr> nodeResponse;
+
+  bool async;
   bool keep;
-  bool waitTillSent_;
-  int timeout_;
+  bool waitTillSent;
+  int timeout;
 
   std::string repr;
   bool isReprValid;
+
+  FCPResult::FCPResultPtr result;
+  bool _hasResult;
 
 //  bool hasStream;
 //  ostream stream;
@@ -32,28 +43,38 @@ class JobTicket {
   int timeQueued;
 
   void putResult();
+
+
+  JobTicket()
+  {
+    _hasResult = false;
+    isReprValid = false;
+  }
 public:
-  typedef boost::shared_ptr<JobTicket> JobTicketPtr;
+  typedef boost::shared_ptr<JobTicket > JobTicketPtr;
 
-  JobTicket(std::string id_, Message::MessagePtr &cmd_);
-  inline JobTicket& async(bool async_);
-  inline JobTicket& keepJob(bool keep_);
-  inline JobTicket& waitTillSent(bool wait);
-  inline JobTicket& timeout(int timeout);
+  static
+  JobTicketPtr factory(std::string id, Message::MessagePtr cmd,
+                             bool async, bool keep, bool waitTillSent,
+                             int timeout);
 
-  const std::string& commandName() const;
+  const std::string& getCommandName() const;
   const std::string& getId() const;
   const std::string& getMessageText() const;
 
   void wait(unsigned int timeout_=0);
   void waitTillReqSent();
 
-  const std::vector<Message::MessagePtr>& getResponse() const;
+  const std::vector<ServerMessage::ServerMessagePtr>& getResponse() const;
   const std::string& toString();
 
+  const FCPResult::FCPResultPtr getResult() const;
+  bool hasResult() const;
 
   friend class NodeThread;
 };
+
+
 
 }
 

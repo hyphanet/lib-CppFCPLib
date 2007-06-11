@@ -6,7 +6,6 @@
 #include <string>
 #include <map>
 #include <boost/shared_ptr.hpp>
-#include "Server.h"
 
 namespace FCPLib {
 
@@ -16,15 +15,18 @@ class Message {
 
   std::map<std::string, std::string> fields;
 
-  bool isDataType;
   bool isReprValid;
+  bool isDataType;
 
-  Message();
+  Message() :
+    isReprValid(false),
+    isDataType(false)
+  {}
+
 public:
   typedef boost::shared_ptr<Message> MessagePtr;
-  static MessagePtr factory(std::string &header);
-  static MessagePtr factory(const char *header);
-  static MessagePtr factory(Server &s);
+
+  static Message::MessagePtr factory(std::string header);
 
   void setField(std::string key, std::string value);
   inline std::string getField(const std::string &key);
@@ -32,6 +34,7 @@ public:
 
   const std::string& toString();
 };
+
 
 }
 

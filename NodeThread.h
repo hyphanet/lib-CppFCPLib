@@ -8,29 +8,25 @@
 #include <map>
 #include <string>
 #include "JobTicket.h"
+#include "ServerMessage.h"
 
 namespace FCPLib {
 
 class Node;
 
-typedef TQueue<JobTicket::JobTicketPtr> JobTicketQueue;
+typedef TQueue< JobTicket::JobTicketPtr > JobTicketQueue;
 
 class NodeThread : public ZThread::Runnable {
-//  ZThread::CountedPtr<Logger> logfile;
   ZThread::CountedPtr< JobTicketQueue > clientReqQueue;
   FCPLib::Server s;
-  ZThread::CountedPtr< std::map<std::string, JobTicket::JobTicketPtr> > jobs;
 
-//  void _hello();
-//  static std::string _getUniqueId();
-//  std::string _rxMsg();
-//  void _on_rxMsg(std::string &message);
+  ZThread::CountedPtr< std::map<std::string, JobTicket::JobTicketPtr > > jobs;
 
   friend class Node;
   NodeThread(std::string &host, int port, ZThread::CountedPtr< JobTicketQueue > &clientReqQueue_) throw();
 
   void sendClientReq(JobTicket::JobTicketPtr &job);
-  void doMessage(Message::MessagePtr &message);
+  void doMessage(ServerMessage::ServerMessagePtr &message);
 public:
   void run();
 };

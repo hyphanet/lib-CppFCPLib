@@ -1,6 +1,5 @@
 
 #include "Node.h"
-#include "Message.h"
 #include "Log.h"
 
 using namespace FCPLib;
@@ -23,22 +22,36 @@ Node::Node(std::string name_, std::string host, int port)
   nodeThread = new NodeThread(host, port, clientReqQueue);
   executor.execute( nodeThread );
 
-  Message::MessagePtr m = Message::factory("ClientHello");
+  Message::MessagePtr m = Message::factory(std::string("ClientHello"));
   m->setField("Name", name);
   m->setField("ExpectedVersion", "2.0");
 
   log().log(DEBUG, "Creating ClientHello\n");
-  JobTicket::JobTicketPtr job( new JobTicket("__hello", m) );
+  JobTicket::JobTicketPtr job = JobTicket::factory("__hello", m, false, false, false, 0);
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for the NodeHello");
   job->wait(0);
   log().log(DEBUG, "NodeHello arrived");
-//  cout << "Izlaz:\n" << job->getResponse()[0]->toString();
 }
 
 Node::~Node()
 {
   executor.interrupt();
 }
+
+FCPListPeersResult
+Node::listPeers(bool withMetaData = false,
+                bool withVolatile = false){
+  Message::MessagePtr m = Message::factory( std::string("ListPeers") );
+  m->setField("WithMetadata", withMetaData ? "true" : "false");
+  m->setField("WithVolatila", withVolatile ? "true" : "false");
+
+  JobTicket::JobTicketPtr job = JobTicket::factory( "__hello", m, false, false, false, 0 );
+  log().log(DEBUG, job->toString());
+  clientReqQueue->put(job);
+
+  //TODO: finish
+}
+

@@ -2,6 +2,7 @@
 #include <string>
 #include "Server.h"
 #include "Node.h"
+#include "FCPListPeersResult.h"
 
 using namespace std;
 using namespace FCPLib;
@@ -17,6 +18,8 @@ int main()
 //	  cout << line;
 //	}
 
-  Node("123", "", -1);
+  Node n("123", "", -1);
+//  FCPListPeersResult::FCPListPeersResultPtr r = n.listPeers();
+
   return 0;
 }

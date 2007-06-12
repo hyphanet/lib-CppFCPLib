@@ -41,17 +41,38 @@ Node::~Node()
   executor.interrupt();
 }
 
-FCPListPeersResult
+FCPListPeersResult::FCPListPeersResultPtr
 Node::listPeers(bool withMetaData = false,
-                bool withVolatile = false){
+                bool withVolatile = false)
+{
   Message::MessagePtr m = Message::factory( std::string("ListPeers") );
   m->setField("WithMetadata", withMetaData ? "true" : "false");
   m->setField("WithVolatila", withVolatile ? "true" : "false");
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__hello", m, false, false, false, 0 );
+  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
 
-  //TODO: finish
+  log().log(DEBUG, "waiting for the EndListPeers");
+  job->wait(0);
+  log().log(DEBUG, "EndListPeers arrived");
+
+  return boost::dynamic_pointer_cast<FCPListPeersResult, FCPResult>(job->getResult());
 }
 
+FCPListPeerNotesResult::FCPListPeerNotesResultPtr
+Node::listPeerNotes(std::string& identifier)
+{
+  Message::MessagePtr m = Message::factory( std::string("ListPeerNotes") );
+  m->setField("NodeIdentifier", identifier);
+
+  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
+  log().log(DEBUG, job->toString());
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for the EndListPeerNotes");
+  job->wait(0);
+  log().log(DEBUG, "EndListPeers arrived");
+
+  return boost::dynamic_pointer_cast<FCPListPeerNotesResult, FCPResult>(job->getResult());
+}

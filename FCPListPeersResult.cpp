@@ -3,12 +3,15 @@
 
 using namespace FCPLib;
 
-FCPListPeersResult::FCPResultPtr
-FCPListPeersResult::createFromMessages(const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse)
+
+const std::vector<ServerMessage::ServerMessagePtr>
+FCPListPeersResult::getPeers() const
 {
-  FCPListPeersResultPtr ret( new FCPListPeersResult() );
+  return peers;
+}
 
-  ret->peers = std::vector<ServerMessage::ServerMessagePtr>( nodeResponse );
-
-  return ret;
+FCPListPeersResult::FCPListPeersResult(const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse)
+{
+  // FIX: do not store last message (EndListPeers)
+  this->peers = std::vector<ServerMessage::ServerMessagePtr>( nodeResponse );
 }

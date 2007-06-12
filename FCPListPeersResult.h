@@ -14,11 +14,12 @@ namespace FCPLib {
 class FCPListPeersResult : public FCPResult {
   std::vector<ServerMessage::ServerMessagePtr> peers;
 
-  FCPListPeersResult() {}
+  FCPListPeersResult( const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse );
 public:
   typedef boost::shared_ptr<FCPListPeersResult> FCPListPeersResultPtr;
 
-  static FCPResultPtr createFromMessages(const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse);
+  const std::vector<ServerMessage::ServerMessagePtr> getPeers() const;
+  friend class FCPResult;
 };
 }
 

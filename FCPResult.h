@@ -13,7 +13,7 @@ class FCPResult {
 public:
   typedef boost::shared_ptr<FCPResult> FCPResultPtr;
 
-  static FCPResultPtr factory(const std::string cmd, std::vector<ServerMessage::ServerMessagePtr> nodeResponse);
+  static FCPResultPtr factory(const std::string cmd, std::vector<ServerMessage::ServerMessagePtr> &nodeResponse);
   virtual ~FCPResult() = 0;
 };
 

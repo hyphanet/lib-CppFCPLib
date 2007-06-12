@@ -7,9 +7,11 @@
 namespace FCPLib {
 
 class ServerMessage {
+  void read(Server &s);
+
+protected:
   Message::MessagePtr message;
 
-  void read(Server &s);
 public:
   typedef boost::shared_ptr<ServerMessage> ServerMessagePtr;
   static ServerMessagePtr factory(Server &s);
@@ -17,6 +19,9 @@ public:
   virtual std::string getIdOfJob() const = 0;
   virtual bool isLastMessage(const std::string &cmd) const = 0;
   virtual ~ServerMessage() {}
+
+  const std::string& toString() const;
+  const Message::MessagePtr getMessage() const { return message; }
 };
 
 }

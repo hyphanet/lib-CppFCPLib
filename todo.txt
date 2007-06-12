@@ -1,0 +1,10 @@
+Todo
+====
+
+*  work on logging messages...
+
+
+Questions
+=========
+
+*  what to do with CloseConnectionDuplicateClientName

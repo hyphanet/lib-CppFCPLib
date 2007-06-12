@@ -68,7 +68,7 @@ NodeThread::doMessage(ServerMessage::ServerMessagePtr &message)
 
   it = jobs->find(message->getIdOfJob());
   if (it == jobs->end()) {
-    log().log(DEBUG, "doMessage : received NodeHello, cannot find __hello in started jobs");
+    log().log(DETAIL, "doMessage : received " + message->toString() + ", cannot find " + message->getIdOfJob() + " in started jobs");
     return;
   }
 

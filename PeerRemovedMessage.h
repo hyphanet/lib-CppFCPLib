@@ -1,5 +1,5 @@
-#ifndef ENDMESSAGE_H__
-#define ENDMESSAGE_H__
+#ifndef PEERREMOVEDMESSAGE_H__
+#define PEERREMOVEDMESSAGE_H__
 
 #include <string>
 #include <stdexcept>
@@ -8,8 +8,8 @@ namespace FCPLib {
 
 class ServerMessage;
 
-class EndMessage : public ServerMessage {
-  EndMessage() {}
+class PeerRemovedMessage : public ServerMessage {
+  PeerRemovedMessage() {}
 public:
   std::string getIdOfJob() const
   {
@@ -18,7 +18,7 @@ public:
 
   bool isLastMessage(const std::string &cmd) const
   {
-    return true;
+   return true;
   }
 
   friend class ServerMessage;
@@ -26,4 +26,4 @@ public:
 
 }
 
-#endif // ENDMESSAGE_H__
+#endif // PEERREMOVEDMESSAGE_H__

@@ -19,6 +19,13 @@ Message::setField(std::string key, std::string value) {
   fields[key] = value;
 }
 
+void
+Message::setFields(const std::map<std::string, std::string> &fields) {
+  for (std::map<std::string, std::string>::const_iterator it = fields.begin(); it != fields.end(); ++it) {
+    this->setField(it->first, it->second);
+  }
+}
+
 std::string
 Message::getField(const std::string &key) {
   return fields[key];

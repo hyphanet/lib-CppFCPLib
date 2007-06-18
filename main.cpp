@@ -2,7 +2,7 @@
 #include <string>
 #include "Server.h"
 #include "Node.h"
-#include "FCPListPeersResult.h"
+#include "FCPMultiMessageResponse.h"
 
 using namespace std;
 using namespace FCPLib;

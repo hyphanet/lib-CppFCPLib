@@ -2,9 +2,8 @@
 #include <stdexcept>
 
 
-#include "FCPListPeersResult.h"
-#include "FCPClientHelloResult.h"
-#include "FCPListPeerNotesResult.h"
+#include "FCPMultiMessageResponse.h"
+#include "FCPOneMessageResponse.h"
 
 using namespace FCPLib;
 
@@ -12,13 +11,13 @@ FCPResult::FCPResultPtr
 FCPResult::factory(const std::string cmd, std::vector<ServerMessage::ServerMessagePtr> &nodeResponse)
 {
   if (cmd == "ClientHello") {
-    return FCPClientHelloResult::FCPClientHelloResultPtr( new FCPClientHelloResult( (*nodeResponse.begin())->getMessage() ) );
+    return FCPOneMessageResponse::FCPOneMessageResponsePtr( new FCPOneMessageResponse( (*nodeResponse.begin())->getMessage() ) );
   } else
   if (cmd == "ListPeers") {
-    return FCPListPeersResult::FCPListPeersResultPtr( new FCPListPeersResult(nodeResponse) );
+    return FCPMultiMessageResponse::FCPMultiMessageResponsePtr( new FCPMultiMessageResponse(nodeResponse) );
   } else
   if (cmd == "ListPeerNotes") {
-    return FCPListPeerNotesResult::FCPListPeerNotesResultPtr( new FCPListPeerNotesResult(nodeResponse) );
+    return FCPMultiMessageResponse::FCPMultiMessageResponsePtr( new FCPMultiMessageResponse(nodeResponse) );
   }
 
   throw new std::runtime_error("Not implemented : " + cmd);

@@ -29,6 +29,7 @@ public:
   static Message::MessagePtr factory(std::string header);
 
   void setField(std::string key, std::string value);
+  void setFields(const std::map<std::string, std::string> &fields);
   inline std::string getField(const std::string &key);
   const std::string& getHeader() const;
 

@@ -3,14 +3,15 @@
 
 #include <string>
 #include <memory>
+#include <map>
 
 #include "zthread/Thread.h"
 #include "zthread/ThreadedExecutor.h"
 
 #include "TQueue.h"
 #include "NodeThread.h"
-#include "FCPListPeersResult.h"
-#include "FCPListPeerNotesResult.h"
+#include "FCPMultiMessageResponse.h"
+#include "FCPOneMessageResponse.h"
 
 namespace FCPLib {
 class Node {
@@ -25,8 +26,14 @@ public:
   Node(std::string name, std::string host, int port);
   ~Node();
 
-  FCPListPeersResult::FCPListPeersResultPtr listPeers(bool, bool);
-  FCPListPeerNotesResult::FCPListPeerNotesResultPtr listPeerNotes(std::string&);
+  FCPMultiMessageResponse::FCPMultiMessageResponsePtr listPeers(bool, bool);
+  FCPMultiMessageResponse::FCPMultiMessageResponsePtr listPeerNotes(const std::string&);
+  void addPeer(const std::string &, bool isURL);
+  void addPeer(const std::map<std::string, std::string> &message);
+  FCPOneMessageResponse::FCPOneMessageResponsePtr modifyPeer(const std::string &, bool, bool, bool);
+  FCPOneMessageResponse::FCPOneMessageResponsePtr modifyPeerNote(const std::string &, const std::string &, int);
+  FCPOneMessageResponse::FCPOneMessageResponsePtr removePeer(const std::string &);
+  FCPOneMessageResponse::FCPOneMessageResponsePtr getNode(bool, bool);
 };
 }
 

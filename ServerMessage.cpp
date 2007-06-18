@@ -1,8 +1,11 @@
 
 #include "ServerMessage.h"
 #include "PeerNoteMessage.h"
+#include "EndMessage.h"
 #include "PeerMessage.h"
 #include "NodeHelloMessage.h"
+#include "PeerRemovedMessage.h"
+#include "NodeDataMessage.h"
 #include "Log.h"
 
 using namespace FCPLib;
@@ -33,7 +36,14 @@ ServerMessage::factory(Server &s){
   } else
   if (header == "EndListPeerNotes") {
     m = ServerMessagePtr( new EndMessage() );
+  } else
+  if (header == "PeerRemoved") {
+    m = ServerMessagePtr( new PeerRemovedMessage() );
+  } else
+  if (header == "NodeData") {
+    m = ServerMessagePtr( new NodeDataMessage() );
   }
+
   m->message = Message::factory(header);
 
   m->read(s);

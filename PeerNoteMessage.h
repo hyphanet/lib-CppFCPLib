@@ -16,7 +16,7 @@ public:
     return "__global";
   }
 
-  bool isLastMessage(const std::string &cmd) const
+  bool isLast(const std::string &cmd) const
   {
     if (cmd == "ListPeerNotes")
       return false;
@@ -26,6 +26,9 @@ public:
     throw new std::runtime_error("Unknown command");
   }
 
+  bool isError() const {
+      return false;
+  }
   friend class ServerMessage;
 };
 

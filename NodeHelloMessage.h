@@ -13,9 +13,12 @@ public:
     return "__hello";
   }
 
-  bool isLastMessage(const std::string &cmd) const
+  bool isLast(const std::string &cmd) const
   {
       return true;
+  }
+  bool isError() const {
+      return false;
   }
 
   friend class ServerMessage;

@@ -1,4 +1,5 @@
 
+#include "Log.h"
 #include "ServerMessage.h"
 #include "PeerNoteMessage.h"
 #include "EndMessage.h"
@@ -6,7 +7,19 @@
 #include "NodeHelloMessage.h"
 #include "PeerRemovedMessage.h"
 #include "NodeDataMessage.h"
-#include "Log.h"
+#include "ConfigDataMessage.h"
+#include "SimpleProgressMessage.h"
+#include "StartedCompressionMessage.h"
+#include "FinishedCompressionMessage.h"
+#include "PutSuccessfulMessage.h"
+#include "URIGeneratedMessage.h"
+#include "PutFailedMessage.h"
+#include "GetFailedMessage.h"
+#include "ProtocolErrorMessage.h"
+#include "IdentifierCollisionMessage.h"
+#include "UnknownNodeIdentifierMessage.h"
+#include "UnknownPeerNoteTypeMessage.h"
+#include "PersistentRequestRemovedMessage.h"
 
 using namespace FCPLib;
 
@@ -42,7 +55,80 @@ ServerMessage::factory(Server &s){
   } else
   if (header == "NodeData") {
     m = ServerMessagePtr( new NodeDataMessage() );
-  }
+  } else
+  if (header == "ConfigData") {
+    m = ServerMessagePtr( new ConfigDataMessage() );
+  } else
+  if (header == "TestDDAReply") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "TestDDAComplete") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "SSKKeypair") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "PersistentGet") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "PersistentPut") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "PersistentPutDir") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "URIGenerated") {
+    m = ServerMessagePtr( new URIGeneratedMessage() );
+  } else
+  if (header == "PutSuccessful") {
+    m = ServerMessagePtr( new PutSuccessfulMessage() );
+  } else
+  if (header == "PutFetchable") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "DataFound") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "AllData") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "StartedCompression") {
+    m = ServerMessagePtr( new StartedCompressionMessage() );
+  } else
+  if (header == "FinishedCompression") {
+    m = ServerMessagePtr( new FinishedCompressionMessage() );
+  } else
+  if (header == "SimpleProgress") {
+    m = ServerMessagePtr( new SimpleProgressMessage() );
+  } else
+  if (header == "EndListPersistentRequest") {
+    m = ServerMessagePtr( new EndMessage() );
+  } else
+  if (header == "PersistentRequestRemoved") {
+    m = ServerMessagePtr( new PersistentRequestRemovedMessage() );
+  } else
+  if (header == "PersistentRequestModified") {
+    throw new std::runtime_error("Not implemented " + header);
+  } else
+  if (header == "PutFailed") {
+    m = ServerMessagePtr( new PutFailedMessage() );
+  } else
+  if (header == "GetFailed") {
+    m = ServerMessagePtr( new GetFailedMessage() );
+  } else
+  if (header == "ProtocolError") {
+    m = ServerMessagePtr( new ProtocolErrorMessage() );
+  } else
+  if (header == "IdentifierCollision") {
+    m = ServerMessagePtr( new IdentifierCollisionMessage() );
+  } else
+  if (header == "UnknownNodeIdentifier") {
+    m = ServerMessagePtr( new UnknownNodeIdentifierMessage() );
+  } else
+  if (header == "UnknownPeerNoteType") {
+    m = ServerMessagePtr( new UnknownPeerNoteTypeMessage() );
+  } else
+    throw new std::runtime_error("Not implemented " + header);
 
   m->message = Message::factory(header);
 

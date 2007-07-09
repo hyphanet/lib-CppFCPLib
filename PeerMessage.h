@@ -16,7 +16,7 @@ public:
     return "__global";
   }
 
-  bool isLastMessage(const std::string &cmd) const
+  bool isLast(const std::string &cmd) const
   {
     if (cmd == "ListPeers")
       return false;
@@ -24,6 +24,10 @@ public:
       return true;
 
     throw new std::runtime_error("Unknown command");
+  }
+
+  bool isError() const {
+      return false;
   }
 
   friend class ServerMessage;

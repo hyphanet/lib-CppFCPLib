@@ -1,5 +1,5 @@
-#ifndef NODEDATAMESSAGE_H__
-#define NODEDATAMESSAGE_H__
+#ifndef PUTFAILEDMESSAGE_H_INCLUDED
+#define PUTFAILEDMESSAGE_H_INCLUDED
 
 #include <string>
 #include <stdexcept>
@@ -8,12 +8,12 @@ namespace FCPLib {
 
 class ServerMessage;
 
-class NodeDataMessage : public ServerMessage {
-  NodeDataMessage() {}
+class PutFailedMessage : public ServerMessage {
+  PutFailedMessage() {}
 public:
   std::string getIdOfJob() const
   {
-    return "__global";
+    return message->getField("Identifier");
   }
 
   bool isLast(const std::string &cmd) const
@@ -21,11 +21,11 @@ public:
     return true;
   }
   bool isError() const {
-      return false;
+      return true;
   }
   friend class ServerMessage;
 };
 
 }
 
-#endif // NODEDATAMESSAGE_H__
+#endif // PUTFAILEDMESSAGE_H_INCLUDED

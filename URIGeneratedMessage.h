@@ -1,5 +1,5 @@
-#ifndef NODEDATAMESSAGE_H__
-#define NODEDATAMESSAGE_H__
+#ifndef URIGENERATEDMESSAGE_H_INCLUDED
+#define URIGENERATEDMESSAGE_H_INCLUDED
 
 #include <string>
 #include <stdexcept>
@@ -8,17 +8,17 @@ namespace FCPLib {
 
 class ServerMessage;
 
-class NodeDataMessage : public ServerMessage {
-  NodeDataMessage() {}
+class URIGeneratedMessage : public ServerMessage {
+  URIGeneratedMessage() {}
 public:
   std::string getIdOfJob() const
   {
-    return "__global";
+    return message->getField("Identifier");
   }
 
   bool isLast(const std::string &cmd) const
   {
-    return true;
+    return false;
   }
   bool isError() const {
       return false;
@@ -28,4 +28,4 @@ public:
 
 }
 
-#endif // NODEDATAMESSAGE_H__
+#endif // URIGENERATEDMESSAGE_H_INCLUDED

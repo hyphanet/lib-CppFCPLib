@@ -139,5 +139,6 @@ JobTicket::getResult() const {
 void
 JobTicket::putResult() {
   result = FCPResult::factory(cmd->getHeader(), nodeResponse);
+  _hasResult = true;
   lock.release();
 }

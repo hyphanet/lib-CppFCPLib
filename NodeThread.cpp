@@ -41,7 +41,7 @@ void NodeThread::run(){
       }
     }
   } catch (ZThread::Synchronization_Exception& e) {
-    // do some cleanup
+    log().log(DEBUG, "_mgrThread: Caught Synchronization_Exception");
   }
 }
 
@@ -74,7 +74,7 @@ NodeThread::doMessage(ServerMessage::ServerMessagePtr &message)
 
   job = it->second;
   job->nodeResponse.push_back(message);
-  if (message->isLastMessage(job->getCommandName())) {
+  if (message->isLast(job->getCommandName())) {
     job->putResult();
   }
 }

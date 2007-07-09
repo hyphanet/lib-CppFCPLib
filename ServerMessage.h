@@ -17,7 +17,8 @@ public:
   static ServerMessagePtr factory(Server &s);
 
   virtual std::string getIdOfJob() const = 0;
-  virtual bool isLastMessage(const std::string &cmd) const = 0;
+  virtual bool isLast(const std::string &cmd) const = 0;
+  virtual bool isError() const = 0;
   virtual ~ServerMessage() {}
 
   const std::string& toString() const;

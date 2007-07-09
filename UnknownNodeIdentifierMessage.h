@@ -1,5 +1,5 @@
-#ifndef NODEDATAMESSAGE_H__
-#define NODEDATAMESSAGE_H__
+#ifndef UNKNOWNNODEIDENTIFIERMESSAGE_H_INCLUDED
+#define UNKNOWNNODEIDENTIFIERMESSAGE_H_INCLUDED
 
 #include <string>
 #include <stdexcept>
@@ -8,8 +8,8 @@ namespace FCPLib {
 
 class ServerMessage;
 
-class NodeDataMessage : public ServerMessage {
-  NodeDataMessage() {}
+class UnknownNodeIdentifierMessage : public ServerMessage {
+  UnknownNodeIdentifierMessage() {}
 public:
   std::string getIdOfJob() const
   {
@@ -21,11 +21,11 @@ public:
     return true;
   }
   bool isError() const {
-      return false;
+      return true;
   }
   friend class ServerMessage;
 };
 
 }
 
-#endif // NODEDATAMESSAGE_H__
+#endif // UNKNOWNNODEIDENTIFIERMESSAGE_H_INCLUDED

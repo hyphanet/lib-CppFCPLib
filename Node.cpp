@@ -8,7 +8,7 @@ std::string
 Node::_getUniqueId() {
     char newid[100];
     sprintf(newid, "id%d", (int) time(0));
-    return string(newid);
+    return std::string(newid);
 }
 
 Node::Node(std::string name_, std::string host, int port)
@@ -44,12 +44,11 @@ Node::~Node()
 }
 
 FCPMultiMessageResponse::FCPMultiMessageResponsePtr
-Node::listPeers(bool withMetaData = false,
-                bool withVolatile = false)
+Node::listPeers(const AdditionalFields& fields)
 {
   Message::MessagePtr m = Message::factory( std::string("ListPeers") );
-  m->setField("WithMetadata", withMetaData ? "true" : "false");
-  m->setField("WithVolatila", withVolatile ? "true" : "false");
+  if (fields.hasField("WithMetadata")) m->setField("WithMetadata", fields.getField("WithMetadata"));
+  if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
   JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
   log().log(DEBUG, job->toString());
@@ -115,20 +114,14 @@ Node::addPeer(const std::map<std::string, std::string> &message)
 
 FCPOneMessageResponse::FCPOneMessageResponsePtr
 Node::modifyPeer(const std::string & nodeIdentifier,
-                 bool allowLocalAddresses = false,
-                 bool isDisabled = false,
-                 bool isListenOnly = false)
+                 const AdditionalFields& fields)
 {
   Message::MessagePtr m = Message::factory( std::string("ModifyPeer") );
 
   m->setField("NodeIdentifier", nodeIdentifier);
-  if (allowLocalAddresses)
-    m->setField("AllowLocaAddresses", "true");
-  if (isDisabled)
-    m->setField("IsDisabled", "true");
-  if (isListenOnly)
-    m->setField("IsListenOnly", "true");
-
+  if (fields.hasField("AllowLocalAddresses")) m->setField("AllowLocalAddresses", fields.getField("AllowLocalAddresses"));
+  if (fields.hasField("IsDisabled")) m->setField("IsDisabled", fields.getField("IsDisabled"));
+  if (fields.hasField("IsListenOnly")) m->setField("IsListenOnly", fields.getField("IsListenOnly"));
 
   JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
   log().log(DEBUG, job->toString());
@@ -150,7 +143,7 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
 
   m->setField("NodeIdentifier", nodeIdentifier);
   m->setField("NoteText", noteText);
-  m->setField("PeerNoteType", "1");
+  m->setField("PeerNoteType", "1");  // TODO: change to peerNoteType once it is used
 
   JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
   log().log(DEBUG, job->toString());
@@ -183,15 +176,12 @@ Node::removePeer(const std::string &identifier)
 }
 
 FCPOneMessageResponse::FCPOneMessageResponsePtr
-Node::getNode(bool withPrivate = false,
-              bool withVolatile = false)
+Node::getNode(const AdditionalFields& fields)
 {
   Message::MessagePtr m = Message::factory( std::string("GetNode") );
 
-  if (withPrivate)
-    m->setField("WithPrivate", "True");
-  if (withVolatile)
-    m->setField("WithVolatile", "True");
+  if (fields.hasField("WithPrivate")) m->setField("WithPrivate", fields.getField("WithPrivate"));
+  if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
   JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
   log().log(DEBUG, job->toString());
@@ -202,4 +192,89 @@ Node::getNode(bool withPrivate = false,
   log().log(DEBUG, "NodeData received");
 
   return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+}
+
+FCPOneMessageResponse::FCPOneMessageResponsePtr
+Node::getConfig(const AdditionalFields& fields)
+{
+  Message::MessagePtr m = Message::factory( std::string("GetConfig") );
+
+  if (fields.hasField("WithCurrent")) m->setField("WithCurrent", fields.getField("WithCurrent"));
+  if (fields.hasField("WithDefaul")) m->setField("WithDefaul", fields.getField("WithDefaul"));
+  if (fields.hasField("WithSortOrder")) m->setField("WithSortOrder", fields.getField("WithSortOrder"));
+  if (fields.hasField("WithExpertFlag")) m->setField("WithExpertFlag", fields.getField("WithExpertFlag"));
+  if (fields.hasField("WithForceWriteFlag")) m->setField("WithForceWriteFlag", fields.getField("WithForceWriteFlag"));
+  if (fields.hasField("WithShortDescription")) m->setField("WithShortDescription", fields.getField("WithShortDescription"));
+  if (fields.hasField("WithLongDescription")) m->setField("WithLongDescription", fields.getField("WithLongDescription"));
+
+  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
+  log().log(DEBUG, job->toString());
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for the ConfigData");
+  job->wait(0);
+  log().log(DEBUG, "ConfigData received");
+
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+}
+
+FCPMultiMessageResponse::FCPMultiMessageResponsePtr
+Node::putData(const std::string URI, const std::string data, const std::string id, const AdditionalFields& fields )
+{
+  Message::MessagePtr m = Message::factory( std::string("ClientPut"), true );
+
+  m->setField("URI", URI);
+  m->setField("Identifier", id == "" ? _getUniqueId() : id);
+  if (fields.hasField("mimetype")) m->setField("Metadata.ContentType", fields.getField("mimetype"));
+  if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
+  if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
+  if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
+  if (fields.hasField("GetCHKOnly")) m->setField("GetCHKOnly", fields.getField("GetCHKOnly"));
+  if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  if (fields.hasField("DontCompress")) m->setField("DontCompress", fields.getField("DontCompress"));
+  if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
+  if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
+  if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
+  if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  m->setField("UploadFrom", "direct");
+  m->setField("Data", data);
+
+  JobTicket::JobTicketPtr job = JobTicket::factory( m->getField("Identifier"), m, false, false, false, 0 );
+  log().log(DEBUG, job->toString());
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for the put successful");
+  job->wait(0);
+  log().log(DEBUG, "put successful arrived");
+
+  return boost::dynamic_pointer_cast<FCPMultiMessageResponse, FCPResult>(job->getResult());
+}
+
+FCPMultiMessageResponse::FCPMultiMessageResponsePtr
+Node::putData(const std::string URI, const std::string target, const std::string id, const AdditionalFields& fields )
+{
+  Message::MessagePtr m = Message::factory( std::string("ClientPut"));
+
+  m->setField("URI", URI);
+  m->setField("Identifier", id == "" ? _getUniqueId() : id);
+  if (fields.hasField("mimetype")) m->setField("Metadata.ContentType", fields.getField("mimetype"));
+  if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
+  if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
+  if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
+  if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
+  if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
+  if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
+  if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  m->setField("TargetURI", target);
+
+  JobTicket::JobTicketPtr job = JobTicket::factory( m->getField("Identifier"), m, false, false, false, 0 );
+  log().log(DEBUG, job->toString());
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for the put successful");
+  job->wait(0);
+  log().log(DEBUG, "put successful arrived");
+
+  return boost::dynamic_pointer_cast<FCPMultiMessageResponse, FCPResult>(job->getResult());
 }

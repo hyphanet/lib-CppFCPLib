@@ -1,5 +1,5 @@
-#ifndef NODEDATAMESSAGE_H__
-#define NODEDATAMESSAGE_H__
+#ifndef CONFIGDATAMESSAGE_H_INCLUDED
+#define CONFIGDATAMESSAGE_H_INCLUDED
 
 #include <string>
 #include <stdexcept>
@@ -8,8 +8,8 @@ namespace FCPLib {
 
 class ServerMessage;
 
-class NodeDataMessage : public ServerMessage {
-  NodeDataMessage() {}
+class ConfigDataMessage : public ServerMessage {
+  ConfigDataMessage() {}
 public:
   std::string getIdOfJob() const
   {
@@ -28,4 +28,4 @@ public:
 
 }
 
-#endif // NODEDATAMESSAGE_H__
+#endif // CONFIGDATAMESSAGE_H_INCLUDED

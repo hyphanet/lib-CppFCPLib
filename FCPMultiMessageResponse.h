@@ -14,9 +14,10 @@ namespace FCPLib {
 class FCPMultiMessageResponse : public FCPResult {
   std::vector<ServerMessage::ServerMessagePtr> messages;
 
-  FCPMultiMessageResponse( const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse ) {
+  FCPMultiMessageResponse( const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse, bool removeLast = true ) {
     messages = nodeResponse;
-    messages.pop_back();
+    if (removeLast)
+      messages.pop_back();
   }
 public:
   typedef boost::shared_ptr<FCPMultiMessageResponse> FCPMultiMessageResponsePtr;

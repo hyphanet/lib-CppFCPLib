@@ -1,11 +1,15 @@
 #include "Message.h"
-
+#include <boost/lexical_cast.hpp>
 
 using namespace FCPLib;
 
 Message::MessagePtr
-Message::factory(std::string header){
-  Message::MessagePtr m( new Message() );
+Message::factory(std::string header, bool isData){
+  Message::MessagePtr m;
+  if (!isData)
+    m = Message::MessagePtr( new Message() );
+  else
+    m = Message::MessagePtr( new DataMessage() );
 
   m->header = header;
 
@@ -26,15 +30,19 @@ Message::setFields(const std::map<std::string, std::string> &fields) {
   }
 }
 
-std::string
-Message::getField(const std::string &key) {
-  return fields[key];
+const std::string&
+Message::getField(std::string key) const
+{
+  std::map<std::string, std::string>::const_iterator it;
+  it = fields.find(key);
+  if (it == fields.end())
+    return "";
+  else
+    return it->second;
 }
-
 
 const std::string&
 Message::toString() {
-  static char intToString[30];
   if (isReprValid)
     return repr;
   repr = header + "\n";
@@ -44,12 +52,12 @@ Message::toString() {
     else
       repr += it->first + "=" + it->second + "\n";
   if (isDataType) {
+    std::string& data = fields["Data"];
     repr += "DataLength=";
-    sprintf(intToString, "%d", fields["Data"].size());     // FIXME
-    repr += std::string(intToString);
+    repr += boost::lexical_cast<std::string>(data.size());
     repr += "\n";
     repr += "Data\n";
-    repr += fields["Data"];
+    repr += data;
   } else {
     repr += "EndMessage\n";
   }

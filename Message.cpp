@@ -30,7 +30,7 @@ Message::setFields(const std::map<std::string, std::string> &fields) {
   }
 }
 
-const std::string&
+const std::string
 Message::getField(std::string key) const
 {
   std::map<std::string, std::string>::const_iterator it;

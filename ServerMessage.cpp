@@ -20,6 +20,10 @@
 #include "UnknownNodeIdentifierMessage.h"
 #include "UnknownPeerNoteTypeMessage.h"
 #include "PersistentRequestRemovedMessage.h"
+#include "TestDDACompleteMessage.h"
+#include "TestDDAReplyMessage.h"
+#include "SSKKeypairMessage.h"
+#include "CloseConnectionDuplicateNameMessage.h"
 
 using namespace FCPLib;
 
@@ -37,6 +41,9 @@ ServerMessage::factory(Server &s){
 
   if (header == "NodeHello"){
     m = ServerMessagePtr( new NodeHelloMessage() );
+  } else
+  if (header == "CloseConnectionDuplicateName") {
+    m = ServerMessagePtr( new CloseConnectionDuplicateNameMessage() );
   } else
   if (header == "Peer") {
     m = ServerMessagePtr( new PeerMessage() );
@@ -60,13 +67,13 @@ ServerMessage::factory(Server &s){
     m = ServerMessagePtr( new ConfigDataMessage() );
   } else
   if (header == "TestDDAReply") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = ServerMessagePtr( new TestDDAReplyMessage() );
   } else
   if (header == "TestDDAComplete") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = ServerMessagePtr( new TestDDACompleteMessage() );
   } else
   if (header == "SSKKeypair") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = ServerMessagePtr( new SSKKeypairMessage() );
   } else
   if (header == "PersistentGet") {
     throw new std::runtime_error("Not implemented " + header);

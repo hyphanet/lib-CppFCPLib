@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <boost/lexical_cast.hpp>
+#include <exception>
 
 namespace FCPLib {
 
@@ -24,8 +25,12 @@ public:
     if (fields.find(key) == fields.end()) return false;
     return true;
   }
-  const std::string& getField(std::string key) const {
-    return fields[key];
+  const std::string& getField(std::string key) const throw(std::invalid_argument){
+    std::map<std::string, std::string>::const_iterator it;
+    it = fields.find(key);
+    if (it == fields.end())
+      throw new std::invalid_argument("Additional fields object does not contain: " + key);
+    return it->second;
   }
 };
 

@@ -9,8 +9,8 @@
 namespace FCPLib {
 
 class FCPOneMessageResponse : public FCPResult {
+protected:
   Message::MessagePtr message;
-
   FCPOneMessageResponse(Message::MessagePtr message_) : message(message_) {}
 public:
   typedef boost::shared_ptr<FCPOneMessageResponse> FCPOneMessageResponsePtr;

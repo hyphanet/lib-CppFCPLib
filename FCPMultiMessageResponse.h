@@ -12,6 +12,8 @@ namespace FCPLib {
 
 
 class FCPMultiMessageResponse : public FCPResult {
+
+protected:
   std::vector<ServerMessage::ServerMessagePtr> messages;
 
   FCPMultiMessageResponse( const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse, bool removeLast = true ) {
@@ -22,7 +24,7 @@ class FCPMultiMessageResponse : public FCPResult {
 public:
   typedef boost::shared_ptr<FCPMultiMessageResponse> FCPMultiMessageResponsePtr;
 
-  const std::vector<ServerMessage::ServerMessagePtr> getMessages() const {
+  const std::vector<ServerMessage::ServerMessagePtr>& getMessages() const {
     return messages;
   }
   friend class FCPResult;

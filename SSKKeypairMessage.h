@@ -1,5 +1,5 @@
-#ifndef IDENTIFIERCOLLISIONMESSAGE_H_INCLUDED
-#define IDENTIFIERCOLLISIONMESSAGE_H_INCLUDED
+#ifndef SSKKEYPAIRMESSAGE_H_INCLUDED
+#define SSKKEYPAIRMESSAGE_H_INCLUDED
 
 #include <string>
 #include <stdexcept>
@@ -8,8 +8,8 @@ namespace FCPLib {
 
 class ServerMessage;
 
-class IdentifierCollisionMessage : public ServerMessage {
-  IdentifierCollisionMessage() {}
+class SSKKeypairMessage : public ServerMessage {
+  SSKKeypairMessage() {}
 public:
   std::string getIdOfJob() const
   {
@@ -21,11 +21,11 @@ public:
     return true;
   }
   bool isError() const {
-      return true;
+      return false;
   }
   friend class ServerMessage;
 };
 
 }
 
-#endif // IDENTIFIERCOLLISIONMESSAGE_H_INCLUDED
+#endif // SSKKEYPAIRMESSAGE_H_INCLUDED

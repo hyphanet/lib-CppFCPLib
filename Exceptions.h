@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 #include <cerrno>
+#include "Message.h"
 
 namespace FCPLib {
 
@@ -15,6 +16,17 @@ public:
   StdError(std::string &func, std::string &message, std::string &errstring);
   StdError(const char *func, const char *message, const char *errstring);
   ~StdError() throw();
+};
+
+class FCPException : public std::runtime_error {
+  Message::MessagePtr message;
+public:
+  FCPException(std::string msg);
+  FCPException(Message::MessagePtr m);
+  const Message::MessagePtr& getMessage() const {
+    return message;
+  }
+  ~FCPException() throw();
 };
 
 }

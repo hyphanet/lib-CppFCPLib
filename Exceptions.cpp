@@ -29,3 +29,15 @@ StdError::StdError(const char *func, const char *message, const char *errstring)
 StdError::~StdError() throw()
 {
 }
+
+FCPException::FCPException(Message::MessagePtr m)
+  : std::runtime_error(m->getHeader()),
+    message(m)
+{
+}
+
+FCPException::~FCPException() throw()
+{
+}
+
+

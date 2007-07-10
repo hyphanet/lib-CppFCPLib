@@ -12,6 +12,7 @@
 #include "NodeThread.h"
 #include "FCPMultiMessageResponse.h"
 #include "FCPOneMessageResponse.h"
+#include "FCPTestDDAReplyResponse.h"
 #include "AdditionalFields.h"
 
 namespace FCPLib {
@@ -23,9 +24,13 @@ class Node {
 
   static std::string _getUniqueId();
 
+  void checkProtocolError(JobTicket::JobTicketPtr &job);
+  Message::MessagePtr nodeHelloMessage;
 public:
   Node(std::string name, std::string host, int port);
   ~Node();
+
+  const Message::MessagePtr getNodeHelloMessage() const;
 
   FCPMultiMessageResponse::FCPMultiMessageResponsePtr listPeers(const AdditionalFields& = AdditionalFields());
   FCPMultiMessageResponse::FCPMultiMessageResponsePtr listPeerNotes(const std::string&);
@@ -36,6 +41,10 @@ public:
   FCPOneMessageResponse::FCPOneMessageResponsePtr removePeer(const std::string &);
   FCPOneMessageResponse::FCPOneMessageResponsePtr getNode(const AdditionalFields& = AdditionalFields());
   FCPOneMessageResponse::FCPOneMessageResponsePtr getConfig(const AdditionalFields& = AdditionalFields());
+  FCPOneMessageResponse::FCPOneMessageResponsePtr modifyConfig(Message::MessagePtr m);
+  FCPTestDDAReplyResponse::FCPTestDDAReplyResponsePtr testDDARequest(std::string dir, bool read, bool write);
+  FCPOneMessageResponse::FCPOneMessageResponsePtr  testDDAResponse(std::string dir, std::string readContent = "");
+  FCPOneMessageResponse::FCPOneMessageResponsePtr generateSSK(std::string identifier);
   FCPMultiMessageResponse::FCPMultiMessageResponsePtr putData(const std::string , // URI
                                                               const std::string , // Data
                                                               const std::string = "", // Identifier

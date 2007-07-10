@@ -31,7 +31,7 @@ public:
 
   void setField(std::string key, std::string value);
   void setFields(const std::map<std::string, std::string> &fields);
-  const std::string& getField(std::string key) const;
+  const std::string getField(std::string key) const;
   const std::string& getHeader() const;
 
   const std::string& toString();

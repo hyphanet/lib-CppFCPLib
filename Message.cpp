@@ -18,7 +18,6 @@ Message::factory(std::string header, bool isData){
 
 void
 Message::setField(std::string key, std::string value) {
-  // TODO: should i check if a message can contain certain field?
   isReprValid = false;
   fields[key] = value;
 }
@@ -47,20 +46,9 @@ Message::toString() {
     return repr;
   repr = header + "\n";
   for (std::map<std::string, std::string>::iterator it = fields.begin(); it != fields.end(); ++it)
-    if (isDataType && it->first == "Data")
-      continue;
-    else
       repr += it->first + "=" + it->second + "\n";
-  if (isDataType) {
-    std::string& data = fields["Data"];
-    repr += "DataLength=";
-    repr += boost::lexical_cast<std::string>(data.size());
-    repr += "\n";
-    repr += "Data\n";
-    repr += data;
-  } else {
+  if (!isDataType)
     repr += "EndMessage\n";
-  }
   isReprValid = true;
   return repr;
 }
@@ -71,3 +59,38 @@ Message::getHeader() const
   return header;
 }
 
+void
+Message::toStream(std::ostream& ostream)
+{
+  ostream << toString();
+}
+
+void
+DataMessage::setStream(std::istream* s_, int dataLength)
+{
+  stream_ = s_;
+  dataLength_ = dataLength;
+}
+
+const std::string&
+DataMessage::toString() {
+  if (isReprValid)
+    return repr;
+  Message::toString();
+  repr += "DataLength\n" + boost::lexical_cast<std::string>(dataLength_);
+  repr += "Data\n";
+  isReprValid = true;
+  return repr;
+}
+
+void
+DataMessage::toStream(std::ostream& ostream)
+{
+  ostream << toString();
+  ostream << *stream_;
+}
+
+void operator<<(std::ostream& ostream, Message::MessagePtr m)
+{
+  ostream << m;
+}

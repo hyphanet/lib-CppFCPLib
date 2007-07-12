@@ -3,18 +3,19 @@
 
 #include "Message.h"
 #include "Server.h"
+#include <exception>
 
 namespace FCPLib {
 
 class ServerMessage {
-  void read(Server &s);
+  void read(boost::shared_ptr<Server> s);
 
 protected:
   Message::MessagePtr message;
 
 public:
   typedef boost::shared_ptr<ServerMessage> ServerMessagePtr;
-  static ServerMessagePtr factory(Server &s);
+  static ServerMessagePtr factory(boost::shared_ptr<Server> s);
 
   virtual std::string getIdOfJob() const = 0;
   virtual bool isLast(const std::string &cmd) const = 0;

@@ -29,13 +29,10 @@ using namespace FCPLib;
 
 
 ServerMessage::ServerMessagePtr
-ServerMessage::factory(Server &s){
+ServerMessage::factory(boost::shared_ptr<Server> s){
   ServerMessage::ServerMessagePtr m;
-  static char line[1000];
 
-  s.readln(line, 1000);
-  line[strlen(line)-1] = 0;
-  std::string header = std::string(line);
+  std::string header = s->readln();
 
   log().log(DETAIL, "NODE: " + header);
 
@@ -144,21 +141,21 @@ ServerMessage::factory(Server &s){
   return m;
 }
 
-void ServerMessage::read(Server &s)
+void ServerMessage::read(boost::shared_ptr<Server> s)
 {
-    static char line[1000];
-    for (;;) {
-    s.readln(line, 1000);
-    line[strlen(line)-1] = 0;
+  std::string line;
+  for (;;) {
+    line = s->readln();
 
-    log().log(DETAIL, "NODE: " + std::string(line));
+    log().log(DETAIL, "NODE: " + line);
 
-    if (!strcmp(line, "End") || !strcmp(line, "EndMessage"))
+    if ( line == "End" || line == "EndMessage" )
       break;
 
-    char *val = strchr(line, '=');
-    *val++ = 0;
-    message->setField(std::string(line), std::string(val));
+    int pos = line.find_first_of('=');
+
+    message->setField(std::string(line.begin(), line.begin() + pos),
+                      std::string(line.begin() + pos + 1, line.end()));
   }
 }
 

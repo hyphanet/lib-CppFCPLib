@@ -9,6 +9,8 @@
 #include <string>
 #include "JobTicket.h"
 #include "ServerMessage.h"
+#include <exception>
+#include <boost/shared_ptr.hpp>
 
 namespace FCPLib {
 
@@ -18,7 +20,12 @@ typedef TQueue< JobTicket::JobTicketPtr > JobTicketQueue;
 
 class NodeThread : public ZThread::Runnable {
   ZThread::CountedPtr< JobTicketQueue > clientReqQueue;
-  FCPLib::Server s;
+  std::string host_;
+  int port_;
+  boost::shared_ptr<Server> s;
+
+  bool isAlive_;
+  ZThread::CountedPtr<std::exception> exception;
 
   ZThread::CountedPtr< std::map<std::string, JobTicket::JobTicketPtr > > jobs;
 
@@ -29,6 +36,12 @@ class NodeThread : public ZThread::Runnable {
   void doMessage(ServerMessage::ServerMessagePtr &message);
 public:
   void run();
+  bool isAlive() const {
+    return isAlive_;
+  }
+  ZThread::CountedPtr<std::exception> getFailure() const {
+    return exception;
+  }
 };
 
 }

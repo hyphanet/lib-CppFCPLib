@@ -2,149 +2,68 @@
 #include "Server.h"
 #include "Exceptions.h"
 #include "DefaultValues.h"
-#include <cstring>
-#include <string>
-#include <netdb.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/poll.h>
+#include <ostream>
+#include <istream>
+#include <boost/lexical_cast.hpp>
 
 #include "Log.h"
 
 using namespace FCPLib;
 
 
-Server::Server(std::string &host, int port){
-	/* Use local host as default address */
-	if (!host.size())
-		host = "127.0.0.1";
+Server::Server(std::string &host, int port)
+  : response_stream(&response){
+    using boost::asio::ip::tcp;
 
-	/* Use default port */
-	if (port<=0)
-	  port = 9481;
+    if ( host == "" ) host = "127.0.0.1";
+    if ( port == -1 ) port = 9481;
 
-	struct hostent *he;
-	struct sockaddr_in addr;
+    tcp::resolver resolver(io_service);
+    tcp::resolver::query query(host, boost::lexical_cast<string>(port));
+    tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+    tcp::resolver::iterator end;
 
-  /* Resolve hostname */
-	if ((he = gethostbyname(host.c_str())) == NULL)
-    throw StdError(__FUNCTION__, "Failed to resolve", strerror(errno));
-
-	/* Snag socket */
-	if ((sockfd = socket(PF_INET, SOCK_STREAM, 0))<0)
-    throw StdError(__FUNCTION__, "Failed to get socket", strerror(errno));
-
-	addr.sin_family = AF_INET;
-	addr.sin_port   = htons(port);
-	addr.sin_addr   = *((struct in_addr *)he->h_addr);
-	memset(&(addr.sin_zero), '\0', 8);
-
-	/* Connect */
-	if (connect(sockfd, (struct sockaddr *)&addr, sizeof(struct sockaddr))<0)	{
-		close(sockfd);
-		throw StdError(__FUNCTION__, "Failed to connect", strerror(errno));
-	}
+    // Try each endpoint until we successfully establish a connection.
+    socket_ = auto_ptr<boost::asio::ip::tcp::socket>( new boost::asio::ip::tcp::socket(io_service) );
+    boost::system::error_code error = boost::asio::error::host_not_found;
+    while (error && endpoint_iterator != end)
+    {
+      socket_->close();
+      socket_->connect(*endpoint_iterator++, error);
+    }
+    if (error)
+      throw boost::system::system_error(error);
 }
 
 Server::~Server(){
-  close(sockfd);
 }
 
-ssize_t Server::readn(void *vptr, size_t n){
-  size_t nleft;
-  ssize_t nread;
-  char *ptr;
+std::string Server::readln(){
+  boost::asio::read_until(*socket_, response, '\n');
 
-  ptr = (char*) vptr;
-  nleft = n;
-  while (nleft > 0) {
-    if ((nread = read(sockfd, ptr, nleft)) < 0) {
-      if (errno == EINTR)
-        nread = 0;
-      else
-        throw StdError(__FUNCTION__, "", strerror(errno));
-    } else if (nread == 0) {
-      break;   // EOF
-    }
-    nleft -= nread;
-    ptr += nread;
-  }
+  std::string line;
+  std::getline(response_stream, line);
 
-  return (n - nleft);
-}
-
-ssize_t Server::writen(const void *vptr, size_t n){
-  size_t nleft;
-  ssize_t nwritten;
-  const char *ptr;
-
-  ptr = (const char*) vptr;
-  nleft = n;
-  while (nleft > 0) {
-    if ((nwritten = write(sockfd, ptr, nleft)) <= 0) {
-      if (errno == EINTR)
-        nwritten = 0;
-      else
-        throw StdError(__FUNCTION__, "", strerror(errno));
-    }
-    nleft -= nwritten;
-    ptr += nwritten;
-  }
-
-  return (n);
-}
-
-ssize_t Server::readln(void *vptr, size_t maxlen){
-  ssize_t n, rc;
-  char c, *ptr;
-
-  ptr = (char *)vptr;
-  for (n = 1; n < maxlen; n++) {
-    if ((rc = read(sockfd, &c, 1)) == 1) {
-      *ptr++ = c;
-      if (c == '\n')
-        break;
-    } else if (!rc) {
-      if (n == 1)
-        return 0;
-      else
-        break;
-    }
-  }
-  *ptr = 0;
-  return n;
+  return line;
 }
 
 void Server::send(const std::string &s){
   log().log(DEBUG, "Sending:\n"+s+"-----------------\n");
-  writen(s.c_str(), s.length());
+  boost::asio::streambuf request;
+  std::ostream request_stream(&request);
+  request_stream << s;
+  boost::asio::write(*socket_, request);
+}
+
+void Server::send(const Message::MessagePtr m)
+{
+  log().log(DEBUG, "Sending:\n"+m->toString()+"-----------------\n");
+  boost::asio::streambuf request;
+  std::ostream request_stream(&request);
+  m->toStream(request_stream);
+  boost::asio::write(*socket_, request);
 }
 
 bool Server::dataAvailable(){
-  int pollret;
-  struct pollfd mypol;
-	mypol.fd = sockfd;
-  mypol.events = POLLERR | POLLHUP | POLLIN;
-
-  pollret = poll(&mypol, 1, pollTimeout);
-
-  if (pollret<0)
-    throw new StdError(__FUNCTION__, "poll error", strerror(errno));
-
-  if (!pollret)
-    return false;
-
-  /* if we get an error, die */
-	if (mypol.revents&POLLERR)
-	  throw new StdError(__FUNCTION__, "poll error", strerror(errno));
-
-	if (mypol.revents&POLLHUP)
-	  throw new StdError(__FUNCTION__, "poll hangup", strerror(errno));
-
-  if (mypol.revents&POLLIN)
-    return true;
-
-  return false;
+  return socket_->available() != 0 || response.size() != 0;
 }

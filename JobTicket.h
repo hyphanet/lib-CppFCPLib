@@ -61,6 +61,7 @@ public:
   const std::string& getCommandName() const;
   const std::string& getId() const;
   const std::string& getMessageText() const;
+  const Message::MessagePtr getCommand() const;
 
   void wait(unsigned int timeout_=0);
   void waitTillReqSent();

@@ -3,19 +3,25 @@
 #define SERVER_H__
 
 #include <string>
+#include <boost/asio.hpp>
+#include "Message.h"
 
 namespace FCPLib {
 
 class Server {
   friend class NodeThread;
-  int sockfd;
-  Server(std::string &host, int port=-1);
+
+  boost::asio::io_service io_service;
+  std::auto_ptr<boost::asio::ip::tcp::socket> socket_;
+  boost::asio::streambuf response;
+  std::istream response_stream;
+
+  Server(std::string& host, int port);
 public:
   ~Server();
-  ssize_t readn(void *vptr, size_t n);
-  ssize_t readln(void *vptr, size_t maxlen);
-  ssize_t writen(const void *vptr, size_t n);
+  std::string readln();
   void send(const std::string &s);
+  void send(Message::MessagePtr m);
   bool dataAvailable();
 };
 

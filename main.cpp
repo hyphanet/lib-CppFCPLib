@@ -20,19 +20,8 @@ int main()
 //	}
 
   /// list pears
-//  Node n("123", "", -1);
-//  FCPMultiMessageResponse::FCPMultiMessageResponsePtr r = n.listPeers();
-//
-//  const std::vector<ServerMessage::ServerMessagePtr>& mess = r->getMessages();
-//  std::vector<ServerMessage::ServerMessagePtr>::const_iterator it;
-//  for (it= mess.begin(); it!=mess.end(); ++it) {
-//    cout << (*it)->toString() << "\n";
-//  }
-//  return 0;
-
-  /// put some data
   Node n("123", "", -1);
-  FCPMultiMessageResponse::FCPMultiMessageResponsePtr r = n.putData("CHK@", "Hello!", "Ident-1");
+  FCPMultiMessageResponse::FCPMultiMessageResponsePtr r = n.listPeers();
 
   const std::vector<ServerMessage::ServerMessagePtr>& mess = r->getMessages();
   std::vector<ServerMessage::ServerMessagePtr>::const_iterator it;
@@ -40,4 +29,15 @@ int main()
     cout << (*it)->toString() << "\n";
   }
   return 0;
+
+  /// put some data
+//  Node n("123", "", -1);
+//  FCPMultiMessageResponse::FCPMultiMessageResponsePtr r = n.putData("CHK@", "Hello!", "Ident-1");
+//
+//  const std::vector<ServerMessage::ServerMessagePtr>& mess = r->getMessages();
+//  std::vector<ServerMessage::ServerMessagePtr>::const_iterator it;
+//  for (it= mess.begin(); it!=mess.end(); ++it) {
+//    cout << (*it)->toString() << "\n";
+//  }
+//  return 0;
 }

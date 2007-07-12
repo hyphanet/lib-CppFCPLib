@@ -59,8 +59,8 @@ Node::Node(std::string name_, std::string host, int port)
   // check if CloceConnectionDuplicateName or ProtocolError has arrived
   checkProtocolError(job); // throws
 
-  nodeHelloMessage = ( boost::dynamic_pointer_cast<FCPErrorResponse, FCPResult> (job->getResult()) )
-                          ->getMessages().back()->getMessage();
+  nodeHelloMessage = ( boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult> (job->getResult()) )
+                          ->getMessage();
 }
 
 Node::~Node()

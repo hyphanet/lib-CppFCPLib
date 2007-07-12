@@ -5,17 +5,18 @@
 
 #include <string>
 #include <map>
+#include <ostream>
+#include <istream>
 #include <boost/shared_ptr.hpp>
 
 namespace FCPLib {
 
 class Message {
+protected:
   std::string repr;
   std::string header;
-
   std::map<std::string, std::string> fields;
 
-protected:
   bool isReprValid;
   bool isDataType;
 
@@ -34,13 +35,24 @@ public:
   const std::string getField(std::string key) const;
   const std::string& getHeader() const;
 
-  const std::string& toString();
+  virtual const std::string& toString();
+  virtual void toStream(std::ostream&);
+
+  virtual ~Message() {}
 };
 
 class DataMessage : public Message {
+  std::istream *stream_;
+  int dataLength_;
 protected:
-  DataMessage() { isDataType = true;}
+  DataMessage() { isDataType = true; }
 
+  void setStream(std::istream* s_, int dataLength);
+  const std::string& toString();
+  void toStream(std::ostream&);
+
+public:
+  ~DataMessage() {}
   friend class Message;
 };
 

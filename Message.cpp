@@ -1,5 +1,7 @@
 #include "Message.h"
 #include <boost/lexical_cast.hpp>
+#include <iterator>
+#include <algorithm>
 
 using namespace FCPLib;
 
@@ -60,9 +62,16 @@ Message::getHeader() const
 }
 
 void
-Message::toStream(std::ostream& ostream)
+Message::toStream(std::ostream& output_stream)
 {
-  ostream << toString();
+  output_stream << toString();
+  output_stream.flush();
+}
+
+void
+Message::toSocket(boost::asio::ip::tcp::socket& socket)
+{
+  boost::asio::write(socket, boost::asio::buffer(toString()));
 }
 
 void
@@ -77,20 +86,26 @@ DataMessage::toString() {
   if (isReprValid)
     return repr;
   Message::toString();
-  repr += "DataLength\n" + boost::lexical_cast<std::string>(dataLength_);
+  repr += "DataLength=" + boost::lexical_cast<std::string>(dataLength_);
   repr += "Data\n";
   isReprValid = true;
   return repr;
 }
 
 void
-DataMessage::toStream(std::ostream& ostream)
+DataMessage::toStream(std::ostream& output_stream)
 {
-  ostream << toString();
-  ostream << *stream_;
+  output_stream << toString();
+  std::copy(std::istream_iterator<char> (*stream_),
+            std::istream_iterator<char> (),
+            std::ostream_iterator<char> (output_stream));
+  output_stream.flush();
 }
 
-void operator<<(std::ostream& ostream, Message::MessagePtr m)
+void
+DataMessage::toSocket(boost::asio::ip::tcp::socket& socket)
 {
-  ostream << m;
+  boost::asio::write( socket, boost::asio::buffer(toString()) );
+  boost::asio::write( socket, boost::asio::buffer(stream_->rdbuf(), dataLength_)  );
 }
+

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <boost/asio.hpp>
+#include <memory>
 #include "Message.h"
 
 namespace FCPLib {
@@ -23,6 +24,13 @@ public:
   void send(const std::string &s);
   void send(Message::MessagePtr m);
   bool dataAvailable();
+
+  #ifdef _DEBUG_
+  static std::auto_ptr<Server> create_server(std::string& host, int port)
+  {
+    return std::auto_ptr<Server>( new Server(host, port) );
+  }
+  #endif
 };
 
 }

@@ -8,6 +8,7 @@
 #include <ostream>
 #include <istream>
 #include <boost/shared_ptr.hpp>
+#include <boost/asio.hpp>
 
 namespace FCPLib {
 
@@ -37,7 +38,7 @@ public:
 
   virtual const std::string& toString();
   virtual void toStream(std::ostream&);
-
+  virtual void toSocket(boost::asio::ip::tcp::socket& socket);
   virtual ~Message() {}
 };
 
@@ -46,12 +47,11 @@ class DataMessage : public Message {
   int dataLength_;
 protected:
   DataMessage() { isDataType = true; }
-
+public:
   void setStream(std::istream* s_, int dataLength);
   const std::string& toString();
   void toStream(std::ostream&);
-
-public:
+  void toSocket(boost::asio::ip::tcp::socket& socket);
   ~DataMessage() {}
   friend class Message;
 };

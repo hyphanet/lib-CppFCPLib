@@ -49,19 +49,15 @@ std::string Server::readln(){
 
 void Server::send(const std::string &s){
   log().log(DEBUG, "Sending:\n"+s+"-----------------\n");
-  boost::asio::streambuf request;
-  std::ostream request_stream(&request);
-  request_stream << s;
-  boost::asio::write(*socket_, request);
+
+  boost::asio::write(*socket_, boost::asio::buffer(s));
 }
 
 void Server::send(const Message::MessagePtr m)
 {
   log().log(DEBUG, "Sending:\n"+m->toString()+"-----------------\n");
-  boost::asio::streambuf request;
-  std::ostream request_stream(&request);
-  m->toStream(request_stream);
-  boost::asio::write(*socket_, request);
+
+  m->toSocket(*socket_);
 }
 
 bool Server::dataAvailable(){

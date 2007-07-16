@@ -2,17 +2,12 @@
 #include <string>
 #include "Server.h"
 #include "Node.h"
-#include "FCPMultiMessageResponse.h"
 #include "ServerMessage.h"
-#include "FCPTestDDAResponse.h"
-
-using namespace std;
-using namespace FCPLib;
 
 int main()
 {
-  Node n("123", "", -1);
-  Message::Ptr m = n.getNode();
+  FCPLib::Node n("123", "", -1);
+  FCPLib::Message::Ptr m = n.getNode();
   std::cout << m->toString() ;
 
   getchar ();

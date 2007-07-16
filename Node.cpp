@@ -1,12 +1,12 @@
 
-#include "Node.h"
-#include "Log.h"
 #include <boost/lexical_cast.hpp>
 #include <typeinfo>
-#include "Exceptions.h"
-#include "FCPErrorResponse.h"
 #include <fstream>
 #include <sstream>
+
+#include "Node.h"
+#include "Log.h"
+#include "Exceptions.h"
 
 using namespace FCPLib;
 
@@ -26,7 +26,7 @@ Node::getNodeHelloMessage() const
 void
 Node::checkProtocolError(Response &resp)
 {
-  ServerMessage::Ptr sm = createResult<ServerMessage::Ptr, LastMessage>( resp );
+  ServerMessage::Ptr sm = createResult<ServerMessage::Ptr, LastMessageConverter>( resp );
 
   if ( sm->isError() )
     throw FCPException( sm->getMessage() );
@@ -58,10 +58,7 @@ Node::Node(std::string name_, std::string host, int port)
   // check if CloceConnectionDuplicateName or ProtocolError has arrived
   checkProtocolError(resp); // throws
 
-  nodeHelloMessage = boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                                 FCPResult>(
-                                                     FCPResult::factory( job->getCommandName(), resp )
-                                                )->getMessage();
+  nodeHelloMessage = createResult<Message::Ptr, MessageConverter>( resp );
 }
 
 Node::~Node()
@@ -69,7 +66,7 @@ Node::~Node()
   executor.interrupt();
 }
 
-FCPMultiMessageResponse::Ptr
+std::vector<Message::Ptr>
 Node::listPeers(const AdditionalFields& fields)
 {
   Message::Ptr m = Message::factory( std::string("ListPeers") );
@@ -84,13 +81,12 @@ Node::listPeers(const AdditionalFields& fields)
 
   Response resp = job->getResponse();
   // NOTE: error should never happen here...
-  checkProtocolError(resp) // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPMultiMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<std::vector<Message::Ptr>, VectorWithoutLastConverter>( resp );
 }
 
-FCPMultiMessageResponse::Ptr
+std::vector<Message::Ptr>
 Node::listPeerNotes(const std::string& identifier)
 {
   Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
@@ -106,11 +102,10 @@ Node::listPeerNotes(const std::string& identifier)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPMultiMessageResponse,
-                                    FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<std::vector<Message::Ptr>, VectorWithoutLastConverter>( resp );
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::addPeer(const std::string &value, bool isURL = false) {
   Message::Ptr m = Message::factory( std::string("AddPeer") );
   if (!isURL)
@@ -128,12 +123,10 @@ Node::addPeer(const std::string &value, bool isURL = false) {
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::addPeer(const std::map<std::string, std::string> &message)
 {
   Message::Ptr m = Message::factory( std::string("AddPeer") );
@@ -150,11 +143,10 @@ Node::addPeer(const std::map<std::string, std::string> &message)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::modifyPeer(const std::string & nodeIdentifier,
                  const AdditionalFields& fields)
 {
@@ -174,11 +166,10 @@ Node::modifyPeer(const std::string & nodeIdentifier,
   Response resp = job->getResponse();
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::modifyPeerNote(const std::string & nodeIdentifier,
                      const std::string & noteText,
                      int peerNoteType = 1)
@@ -199,11 +190,10 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::removePeer(const std::string &identifier)
 {
   Message::Ptr m = Message::factory( std::string("RemovePeer") );
@@ -221,8 +211,7 @@ Node::removePeer(const std::string &identifier)
   checkProtocolError(resp); // throws
 
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
 Message::Ptr
@@ -243,13 +232,10 @@ Node::getNode(const AdditionalFields& fields)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-//  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-//                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
-
   return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::getConfig(const AdditionalFields& fields)
 {
   Message::Ptr m = Message::factory( std::string("GetConfig") );
@@ -272,11 +258,10 @@ Node::getConfig(const AdditionalFields& fields)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::modifyConfig(Message::Ptr m)
 {
   if (m->getHeader() != "ModifyConfig")
@@ -292,11 +277,10 @@ Node::modifyConfig(Message::Ptr m)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPTestDDAReplyResponse::Ptr
+TestDDAReplyResponse::Ptr
 Node::testDDARequest(std::string dir, bool read, bool write)
 {
   Message::Ptr m = Message::factory( std::string("TestDDARequest") );
@@ -317,12 +301,10 @@ Node::testDDARequest(std::string dir, bool read, bool write)
   // check if protocol error has occured
   checkProtocolError(resp); // throws
 
-
-  return boost::dynamic_pointer_cast<FCPTestDDAReplyResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<TestDDAReplyResponse::Ptr, TestDDAReplyConverter>( resp );
 }
 
-FCPTestDDAResponse
+TestDDAResponse
 Node::testDDAResponse(std::string dir, std::string readContent)
 {
   Message::Ptr m = Message::factory( std::string("TestDDAResponse") );
@@ -338,25 +320,19 @@ Node::testDDAResponse(std::string dir, std::string readContent)
   job->wait(globalCommandsTimeout);
 
   Response resp = job->getResponse();
-
   // check if protocol error has occured
   checkProtocolError(resp); // throws
 
-
-  FCPOneMessageResponse::Ptr response =
-     boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                 FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
-
-  m = response->getMessage();
-  return FCPTestDDAResponse(m->getField("Directory"),
+  m = createResult<Message::Ptr, MessageConverter>( resp );
+  return TestDDAResponse(m->getField("Directory"),
                             m->getField("ReadDirectoryAllowed")=="true",
                             m->getField("WriteDirectoryAllowed")=="true");
 }
 
-FCPTestDDAResponse
+TestDDAResponse
 Node::testDDA(std::string dir, bool read, bool write)
 {
-   FCPTestDDAReplyResponse::Ptr replyResponse;
+   TestDDAReplyResponse::Ptr replyResponse;
    Message::Ptr m;
 
    try
@@ -378,33 +354,33 @@ Node::testDDA(std::string dir, bool read, bool write)
          os.close();
        }
      }
-     FCPTestDDAResponse ret = testDDAResponse(dir, readContent.str());
+     TestDDAResponse ret = testDDAResponse(dir, readContent.str());
      //TODO: delete created file
      return ret;
    }
    catch (FCPException& e)
    {
      log().log(ERROR, e.getMessage()->toString());
-     return FCPTestDDAResponse(dir, false, false);
+     return TestDDAResponse(dir, false, false);
    }
    catch (std::logic_error& e)
    {
      log().log(FATAL, e.what()); // this should never happen... TODO: should I force shutdown?
-     return FCPTestDDAResponse(dir, false, false);
+     return TestDDAResponse(dir, false, false);
    }
    catch (std::runtime_error& e)
    {
      log().log(ERROR, e.what());
-     return FCPTestDDAResponse(dir, false, false);
+     return TestDDAResponse(dir, false, false);
    }
    catch (std::exception& e)
    {
      log().log(ERROR, e.what());
-     return FCPTestDDAResponse(dir, false, false);
+     return TestDDAResponse(dir, false, false);
    }
 }
 
-FCPOneMessageResponse::Ptr
+Message::Ptr
 Node::generateSSK(std::string identifier)
 {
   Message::Ptr m = Message::factory( std::string("GenerateSSK") );
@@ -419,8 +395,7 @@ Node::generateSSK(std::string identifier)
   Response resp = job->getResponse();
   checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
-                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
 JobTicket::Ptr

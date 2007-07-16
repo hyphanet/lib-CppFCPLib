@@ -1,16 +1,18 @@
 #ifndef NODETHREAD_H__
 #define NODETHREAD_H__
 
-#include "zthread/Thread.h"
+#include <zthread/Thread.h>
+#include <map>
+#include <string>
+#include <exception>
+#include <boost/shared_ptr.hpp>
+
+#include "JobTicket.h"
+#include "ServerMessage.h"
 #include "TQueue.h"
 #include "Log.h"
 #include "Server.h"
-#include <map>
-#include <string>
-#include "JobTicket.h"
-#include "ServerMessage.h"
-#include <exception>
-#include <boost/shared_ptr.hpp>
+
 
 namespace FCPLib {
 

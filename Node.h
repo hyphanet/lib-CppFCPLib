@@ -8,12 +8,9 @@
 #include "zthread/Thread.h"
 #include "zthread/ThreadedExecutor.h"
 
+#include "FCPResult.h"
 #include "TQueue.h"
 #include "NodeThread.h"
-#include "FCPMultiMessageResponse.h"
-#include "FCPOneMessageResponse.h"
-#include "FCPTestDDAReplyResponse.h"
-#include "FCPTestDDAResponse.h"
 #include "AdditionalFields.h"
 
 namespace FCPLib {
@@ -51,22 +48,22 @@ public:
 
   const Message::Ptr getNodeHelloMessage() const;
 
-  FCPMultiMessageResponse::Ptr listPeers(const AdditionalFields& = AdditionalFields());
-  FCPMultiMessageResponse::Ptr listPeerNotes(const std::string&);
-  FCPOneMessageResponse::Ptr addPeer(const std::string &, bool isURL);
-  FCPOneMessageResponse::Ptr addPeer(const std::map<std::string, std::string> &message);
-  FCPOneMessageResponse::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
-  FCPOneMessageResponse::Ptr modifyPeerNote(const std::string &, const std::string &, int);
-  FCPOneMessageResponse::Ptr removePeer(const std::string &);
+  std::vector<Message::Ptr> listPeers(const AdditionalFields& = AdditionalFields());
+  std::vector<Message::Ptr> listPeerNotes(const std::string&);
+  Message::Ptr addPeer(const std::string &, bool isURL);
+  Message::Ptr addPeer(const std::map<std::string, std::string> &message);
+  Message::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
+  Message::Ptr modifyPeerNote(const std::string &, const std::string &, int);
+  Message::Ptr removePeer(const std::string &);
   Message::Ptr getNode(const AdditionalFields& = AdditionalFields());
-  FCPOneMessageResponse::Ptr getConfig(const AdditionalFields& = AdditionalFields());
-  FCPOneMessageResponse::Ptr modifyConfig(Message::Ptr m);
+  Message::Ptr getConfig(const AdditionalFields& = AdditionalFields());
+  Message::Ptr modifyConfig(Message::Ptr m);
 
-  FCPTestDDAReplyResponse::Ptr testDDARequest(std::string dir, bool read, bool write);
-  FCPTestDDAResponse testDDAResponse(std::string dir, std::string readContent = "");
-  FCPTestDDAResponse testDDA(std::string dir, bool read, bool write);
+  TestDDAReplyResponse::Ptr testDDARequest(std::string dir, bool read, bool write);
+  TestDDAResponse testDDAResponse(std::string dir, std::string readContent = "");
+  TestDDAResponse testDDA(std::string dir, bool read, bool write);
 
-  FCPOneMessageResponse::Ptr generateSSK(std::string identifier);
+  Message::Ptr generateSSK(std::string identifier);
   JobTicket::Ptr putData(const std::string , // URI
                                   std::istream*, // Data Stream
                                   int, // dataLength

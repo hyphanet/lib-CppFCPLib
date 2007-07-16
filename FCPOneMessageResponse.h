@@ -10,12 +10,12 @@ namespace FCPLib {
 
 class FCPOneMessageResponse : public FCPResult {
 protected:
-  Message::MessagePtr message;
-  FCPOneMessageResponse(Message::MessagePtr message_) : message(message_) {}
+  Message::Ptr message;
+  FCPOneMessageResponse(Message::Ptr message_) : message(message_) {}
 public:
-  typedef boost::shared_ptr<FCPOneMessageResponse> FCPOneMessageResponsePtr;
+  typedef boost::shared_ptr<FCPOneMessageResponse> Ptr;
 
-  const Message::MessagePtr getMessage() const { return message; }
+  const Message::Ptr getMessage() const { return message; }
 
   friend class FCPResult;
 };

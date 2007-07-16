@@ -22,7 +22,7 @@ public:
   ~Server();
   std::string readln();
   void send(const std::string &s);
-  void send(Message::MessagePtr m);
+  void send(Message::Ptr m);
   bool dataAvailable();
 
   #ifdef _DEBUG_

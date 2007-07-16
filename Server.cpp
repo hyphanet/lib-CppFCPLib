@@ -53,7 +53,7 @@ void Server::send(const std::string &s){
   boost::asio::write(*socket_, boost::asio::buffer(s));
 }
 
-void Server::send(const Message::MessagePtr m)
+void Server::send(const Message::Ptr m)
 {
   log().log(DEBUG, "Sending:\n"+m->toString()+"-----------------\n");
 

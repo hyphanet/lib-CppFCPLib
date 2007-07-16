@@ -28,49 +28,49 @@
 using namespace FCPLib;
 
 
-ServerMessage::ServerMessagePtr
+ServerMessage::Ptr
 ServerMessage::factory(boost::shared_ptr<Server> s){
-  ServerMessage::ServerMessagePtr m;
+  ServerMessage::Ptr m;
 
   std::string header = s->readln();
 
   log().log(DETAIL, "NODE: " + header);
 
   if (header == "NodeHello"){
-    m = ServerMessagePtr( new NodeHelloMessage() );
+    m = Ptr( new NodeHelloMessage() );
   } else
   if (header == "CloseConnectionDuplicateName") {
-    m = ServerMessagePtr( new CloseConnectionDuplicateNameMessage() );
+    m = Ptr( new CloseConnectionDuplicateNameMessage() );
   } else
   if (header == "Peer") {
-    m = ServerMessagePtr( new PeerMessage() );
+    m = Ptr( new PeerMessage() );
   } else
   if (header == "EndListPeers") {
-    m = ServerMessagePtr( new EndMessage() );
+    m = Ptr( new EndMessage() );
   } else
   if (header == "PeerNote") {
-    m = ServerMessagePtr( new PeerNoteMessage() );
+    m = Ptr( new PeerNoteMessage() );
   } else
   if (header == "EndListPeerNotes") {
-    m = ServerMessagePtr( new EndMessage() );
+    m = Ptr( new EndMessage() );
   } else
   if (header == "PeerRemoved") {
-    m = ServerMessagePtr( new PeerRemovedMessage() );
+    m = Ptr( new PeerRemovedMessage() );
   } else
   if (header == "NodeData") {
-    m = ServerMessagePtr( new NodeDataMessage() );
+    m = Ptr( new NodeDataMessage() );
   } else
   if (header == "ConfigData") {
-    m = ServerMessagePtr( new ConfigDataMessage() );
+    m = Ptr( new ConfigDataMessage() );
   } else
   if (header == "TestDDAReply") {
-    m = ServerMessagePtr( new TestDDAReplyMessage() );
+    m = Ptr( new TestDDAReplyMessage() );
   } else
   if (header == "TestDDAComplete") {
-    m = ServerMessagePtr( new TestDDACompleteMessage() );
+    m = Ptr( new TestDDACompleteMessage() );
   } else
   if (header == "SSKKeypair") {
-    m = ServerMessagePtr( new SSKKeypairMessage() );
+    m = Ptr( new SSKKeypairMessage() );
   } else
   if (header == "PersistentGet") {
     throw new std::runtime_error("Not implemented " + header);
@@ -82,10 +82,10 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
     throw new std::runtime_error("Not implemented " + header);
   } else
   if (header == "URIGenerated") {
-    m = ServerMessagePtr( new URIGeneratedMessage() );
+    m = Ptr( new URIGeneratedMessage() );
   } else
   if (header == "PutSuccessful") {
-    m = ServerMessagePtr( new PutSuccessfulMessage() );
+    m = Ptr( new PutSuccessfulMessage() );
   } else
   if (header == "PutFetchable") {
     throw new std::runtime_error("Not implemented " + header);
@@ -97,40 +97,40 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
     throw new std::runtime_error("Not implemented " + header);
   } else
   if (header == "StartedCompression") {
-    m = ServerMessagePtr( new StartedCompressionMessage() );
+    m = Ptr( new StartedCompressionMessage() );
   } else
   if (header == "FinishedCompression") {
-    m = ServerMessagePtr( new FinishedCompressionMessage() );
+    m = Ptr( new FinishedCompressionMessage() );
   } else
   if (header == "SimpleProgress") {
-    m = ServerMessagePtr( new SimpleProgressMessage() );
+    m = Ptr( new SimpleProgressMessage() );
   } else
   if (header == "EndListPersistentRequest") {
-    m = ServerMessagePtr( new EndMessage() );
+    m = Ptr( new EndMessage() );
   } else
   if (header == "PersistentRequestRemoved") {
-    m = ServerMessagePtr( new PersistentRequestRemovedMessage() );
+    m = Ptr( new PersistentRequestRemovedMessage() );
   } else
   if (header == "PersistentRequestModified") {
     throw new std::runtime_error("Not implemented " + header);
   } else
   if (header == "PutFailed") {
-    m = ServerMessagePtr( new PutFailedMessage() );
+    m = Ptr( new PutFailedMessage() );
   } else
   if (header == "GetFailed") {
-    m = ServerMessagePtr( new GetFailedMessage() );
+    m = Ptr( new GetFailedMessage() );
   } else
   if (header == "ProtocolError") {
-    m = ServerMessagePtr( new ProtocolErrorMessage() );
+    m = Ptr( new ProtocolErrorMessage() );
   } else
   if (header == "IdentifierCollision") {
-    m = ServerMessagePtr( new IdentifierCollisionMessage() );
+    m = Ptr( new IdentifierCollisionMessage() );
   } else
   if (header == "UnknownNodeIdentifier") {
-    m = ServerMessagePtr( new UnknownNodeIdentifierMessage() );
+    m = Ptr( new UnknownNodeIdentifierMessage() );
   } else
   if (header == "UnknownPeerNoteType") {
-    m = ServerMessagePtr( new UnknownPeerNoteTypeMessage() );
+    m = Ptr( new UnknownPeerNoteTypeMessage() );
   } else
     throw new std::runtime_error("Not implemented " + header);
 

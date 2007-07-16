@@ -5,13 +5,13 @@
 
 using namespace FCPLib;
 
-Message::MessagePtr
+Message::Ptr
 Message::factory(std::string header, bool isData){
-  Message::MessagePtr m;
+  Message::Ptr m;
   if (!isData)
-    m = Message::MessagePtr( new Message() );
+    m = Message::Ptr( new Message() );
   else
-    m = Message::MessagePtr( new DataMessage() );
+    m = Message::Ptr( new DataMessage() );
 
   m->header = header;
 
@@ -42,6 +42,12 @@ Message::getField(std::string key) const
     return it->second;
 }
 
+void
+Message::setStream(std::istream* s_, int dataLength)
+{
+  throw std::runtime_error("Message::setStream not implemented");
+}
+
 const std::string&
 Message::toString() {
   if (isReprValid)
@@ -61,12 +67,6 @@ Message::getHeader() const
   return header;
 }
 
-void
-Message::toStream(std::ostream& output_stream)
-{
-  output_stream << toString();
-  output_stream.flush();
-}
 
 void
 Message::toSocket(boost::asio::ip::tcp::socket& socket)
@@ -86,26 +86,26 @@ DataMessage::toString() {
   if (isReprValid)
     return repr;
   Message::toString();
-  repr += "DataLength=" + boost::lexical_cast<std::string>(dataLength_);
+  repr += "DataLength=" + boost::lexical_cast<std::string>(dataLength_) + "\n";
   repr += "Data\n";
   isReprValid = true;
   return repr;
 }
 
-void
-DataMessage::toStream(std::ostream& output_stream)
-{
-  output_stream << toString();
-  std::copy(std::istream_iterator<char> (*stream_),
-            std::istream_iterator<char> (),
-            std::ostream_iterator<char> (output_stream));
-  output_stream.flush();
-}
 
 void
 DataMessage::toSocket(boost::asio::ip::tcp::socket& socket)
 {
+  char buf[1024];
+  int tmp = dataLength_;
   boost::asio::write( socket, boost::asio::buffer(toString()) );
-  boost::asio::write( socket, boost::asio::buffer(stream_->rdbuf(), dataLength_)  );
+  while (tmp > 0) {
+    int m = std::min<int>(tmp, 1024);
+    stream_->read(buf, m);
+    if (stream_->fail())
+      throw std::runtime_error("Error while reading data stream.");
+    boost::asio::write( socket, boost::asio::buffer(buf, m) );
+    tmp -= m;
+  }
 }
 

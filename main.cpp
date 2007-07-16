@@ -4,38 +4,45 @@
 #include "Node.h"
 #include "FCPMultiMessageResponse.h"
 #include "ServerMessage.h"
+#include "FCPTestDDAResponse.h"
 
 using namespace std;
 using namespace FCPLib;
 
 int main()
 {
-//  char line[100];
-//	Server s;
-//	s.send("ClientHello\nName=123\nExpectedVersion=2.0\nEndMessage\n");
+  Node n("123", "", -1);
+  Message::Ptr m = n.getNode();
+  std::cout << m->toString() ;
+
+  getchar ();
+
+  ///testDDA
+//  Node n("123", "", -1);
+//  FCPTestDDAResponse r = n.testDDA("/tmp/", true, true);
 //
-//	for(;;){
-//	  s.readln(line, 100);
-//	  cout << line;
-//	}
+//  std::cout << r.directory << " " << r.readDirectory << " " << r.writeDirectory << endl;
 
   /// list pears
-  Node n("123", "", -1);
-  FCPMultiMessageResponse::FCPMultiMessageResponsePtr r = n.listPeers();
-
-  const std::vector<ServerMessage::ServerMessagePtr>& mess = r->getMessages();
-  std::vector<ServerMessage::ServerMessagePtr>::const_iterator it;
-  for (it= mess.begin(); it!=mess.end(); ++it) {
-    cout << (*it)->toString() << "\n";
-  }
-  return 0;
+//  Node n("123", "", -1);
+//  FCPMultiMessageResponse::Ptr r = n.listPeers();
+//
+//  const std::vector<ServerMessage::Ptr>& mess = r->getMessages();
+//  std::vector<ServerMessage::Ptr>::const_iterator it;
+//  for (it= mess.begin(); it!=mess.end(); ++it) {
+//    cout << (*it)->toString() << "\n";
+//  }
+//  getchar();
+//  r = n.listPeers();
+//  getchar();
+//  return 0;
 
   /// put some data
 //  Node n("123", "", -1);
-//  FCPMultiMessageResponse::FCPMultiMessageResponsePtr r = n.putData("CHK@", "Hello!", "Ident-1");
+//  FCPMultiMessageResponse::Ptr r = n.putData("CHK@", "Hello!", "Ident-1");
 //
-//  const std::vector<ServerMessage::ServerMessagePtr>& mess = r->getMessages();
-//  std::vector<ServerMessage::ServerMessagePtr>::const_iterator it;
+//  const std::vector<ServerMessage::Ptr>& mess = r->getMessages();
+//  std::vector<ServerMessage::Ptr>::const_iterator it;
 //  for (it= mess.begin(); it!=mess.end(); ++it) {
 //    cout << (*it)->toString() << "\n";
 //  }

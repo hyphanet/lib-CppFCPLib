@@ -5,6 +5,8 @@
 #include <typeinfo>
 #include "Exceptions.h"
 #include "FCPErrorResponse.h"
+#include <fstream>
+#include <sstream>
 
 using namespace FCPLib;
 
@@ -15,26 +17,25 @@ Node::_getUniqueId() {
     return std::string(newid);
 }
 
-const Message::MessagePtr
+const Message::Ptr
 Node::getNodeHelloMessage() const
 {
   return nodeHelloMessage;
 }
 
 void
-Node::checkProtocolError(JobTicket::JobTicketPtr &job)
+Node::checkProtocolError(Response &resp)
 {
-  if (typeid(job->getResult()).name() == "FCPErrorResponse") {
-    Message::MessagePtr lastMessage =
-       ( boost::dynamic_pointer_cast<FCPErrorResponse, FCPResult> (job->getResult()) )
-          ->getMessages().back()->getMessage();
-    throw new FCPException(lastMessage);
-  }
+  ServerMessage::Ptr sm = createResult<ServerMessage::Ptr, LastMessage>( resp );
+
+  if ( sm->isError() )
+    throw FCPException( sm->getMessage() );
 }
 
 Node::Node(std::string name_, std::string host, int port)
   : name(name_),
-    clientReqQueue( new TQueue<JobTicket::JobTicketPtr>() )
+    clientReqQueue( new TQueue<JobTicket::Ptr>() ),
+    globalCommandsTimeout(20)  // 20 sec
 {
   if (!name.size())
     name = Node::_getUniqueId();
@@ -43,24 +44,24 @@ Node::Node(std::string name_, std::string host, int port)
   nodeThread = new NodeThread(host, port, clientReqQueue);
   executor.execute( nodeThread );
 
-  Message::MessagePtr m = Message::factory(std::string("ClientHello"));
+  Message::Ptr m = Message::factory(std::string("ClientHello"));
   m->setField("Name", name);
   m->setField("ExpectedVersion", "2.0");
 
-  log().log(DEBUG, "Creating ClientHello\n");
-  JobTicket::JobTicketPtr job = JobTicket::factory("__hello", m, false, false, false, 0);
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory("__hello", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the NodeHello");
-  job->wait(0);
-  log().log(DEBUG, "NodeHello arrived");
+  log().log(DEBUG, "Node constructor: waiting for response to ClientHello");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // check if CloceConnectionDuplicateName or ProtocolError has arrived
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  nodeHelloMessage = ( boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult> (job->getResult()) )
-                          ->getMessage();
+  nodeHelloMessage = boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                                 FCPResult>(
+                                                     FCPResult::factory( job->getCommandName(), resp )
+                                                )->getMessage();
 }
 
 Node::~Node()
@@ -68,180 +69,190 @@ Node::~Node()
   executor.interrupt();
 }
 
-FCPMultiMessageResponse::FCPMultiMessageResponsePtr
+FCPMultiMessageResponse::Ptr
 Node::listPeers(const AdditionalFields& fields)
 {
-  Message::MessagePtr m = Message::factory( std::string("ListPeers") );
+  Message::Ptr m = Message::factory( std::string("ListPeers") );
   if (fields.hasField("WithMetadata")) m->setField("WithMetadata", fields.getField("WithMetadata"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the EndListPeers");
-  job->wait(0);
-  log().log(DEBUG, "EndListPeers arrived");
+  log().log(DEBUG, "waiting for EndListPeers message");
+  job->wait(globalCommandsTimeout);
 
-  // NOTE: error should never happen hear...
-  checkProtocolError(job); // throws
+  Response resp = job->getResponse();
+  // NOTE: error should never happen here...
+  checkProtocolError(resp) // throws
 
-  return boost::dynamic_pointer_cast<FCPMultiMessageResponse, FCPResult>(job->getResult());
+  return boost::dynamic_pointer_cast<FCPMultiMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPMultiMessageResponse::FCPMultiMessageResponsePtr
+FCPMultiMessageResponse::Ptr
 Node::listPeerNotes(const std::string& identifier)
 {
-  Message::MessagePtr m = Message::factory( std::string("ListPeerNotes") );
+  Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the EndListPeerNotes");
-  job->wait(0);
-  log().log(DEBUG, "EndListPeers arrived");
+  log().log(DEBUG, "waiting for EndListPeerNotes message");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPMultiMessageResponse, FCPResult>(job->getResult());
+  return boost::dynamic_pointer_cast<FCPMultiMessageResponse,
+                                    FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-void
+FCPOneMessageResponse::Ptr
 Node::addPeer(const std::string &value, bool isURL = false) {
-  Message::MessagePtr m = Message::factory( std::string("AddPeer") );
+  Message::Ptr m = Message::factory( std::string("AddPeer") );
   if (!isURL)
     m->setField("File", value);
   else
     m->setField("URL", value);
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for AddPeer to be sent");
-  job->waitTillReqSent();
-  log().log(DEBUG, "AddPeer to was sent");
+  log().log(DEBUG, "waiting for Peer message");
+  job->wait(globalCommandsTimeout);
 
-  // should I check for the errors? how do I know that the operation was successful
+  Response resp = job->getResponse();
+  // ProtocolError or UnknownNodeIdentifier
+  checkProtocolError(resp); // throws
+
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
 
-void
+FCPOneMessageResponse::Ptr
 Node::addPeer(const std::map<std::string, std::string> &message)
 {
-  Message::MessagePtr m = Message::factory( std::string("AddPeer") );
+  Message::Ptr m = Message::factory( std::string("AddPeer") );
 
   m->setFields(message);
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for AddPeer to be sent");
-  job->waitTillReqSent();
-  log().log(DEBUG, "AddPeer to was sent");
+  log().log(DEBUG, "waiting for Peer message");
+  job->wait(globalCommandsTimeout);
 
-  // should I check for the errors? how do I know that the operation was successful
+  Response resp = job->getResponse();
+  // ProtocolError or UnknownNodeIdentifier
+  checkProtocolError(resp); // throws
+
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
+FCPOneMessageResponse::Ptr
 Node::modifyPeer(const std::string & nodeIdentifier,
                  const AdditionalFields& fields)
 {
-  Message::MessagePtr m = Message::factory( std::string("ModifyPeer") );
+  Message::Ptr m = Message::factory( std::string("ModifyPeer") );
 
   m->setField("NodeIdentifier", nodeIdentifier);
   if (fields.hasField("AllowLocalAddresses")) m->setField("AllowLocalAddresses", fields.getField("AllowLocalAddresses"));
   if (fields.hasField("IsDisabled")) m->setField("IsDisabled", fields.getField("IsDisabled"));
   if (fields.hasField("IsListenOnly")) m->setField("IsListenOnly", fields.getField("IsListenOnly"));
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the Peer");
-  job->wait(0);
-  log().log(DEBUG, "Peer received");
+  log().log(DEBUG, "waiting for Peer message");
+  job->wait(globalCommandsTimeout);
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+  Response resp = job->getResponse();
+  checkProtocolError(resp); // throws
+
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
+FCPOneMessageResponse::Ptr
 Node::modifyPeerNote(const std::string & nodeIdentifier,
                      const std::string & noteText,
                      int peerNoteType = 1)
 {
-  Message::MessagePtr m = Message::factory( std::string("ModifyPeerNote") );
+  Message::Ptr m = Message::factory( std::string("ModifyPeerNote") );
 
   m->setField("NodeIdentifier", nodeIdentifier);
   m->setField("NoteText", noteText);
   m->setField("PeerNoteType", "1");  // TODO: change to peerNoteType once it is used
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the PeerNote");
-  job->wait(0);
-  log().log(DEBUG, "PeerNote received");
+  log().log(DEBUG, "waiting for PeerNote message");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
+FCPOneMessageResponse::Ptr
 Node::removePeer(const std::string &identifier)
 {
-  Message::MessagePtr m = Message::factory( std::string("RemovePeer") );
+  Message::Ptr m = Message::factory( std::string("RemovePeer") );
 
   m->setField("NodeIdentifier", identifier);
 
-
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the PeerRemoved");
-  job->wait(0);
-  log().log(DEBUG, "PeerRemoved received");
+  log().log(DEBUG, "waiting for PeerRemoved message");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
+Message::Ptr
 Node::getNode(const AdditionalFields& fields)
 {
-  Message::MessagePtr m = Message::factory( std::string("GetNode") );
+  Message::Ptr m = Message::factory( std::string("GetNode") );
 
   if (fields.hasField("WithPrivate")) m->setField("WithPrivate", fields.getField("WithPrivate"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the NodeData");
-  job->wait(0);
-  log().log(DEBUG, "NodeData received");
+  log().log(DEBUG, "waiting for NodeData message");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+//  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+//                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+
+  return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
+FCPOneMessageResponse::Ptr
 Node::getConfig(const AdditionalFields& fields)
 {
-  Message::MessagePtr m = Message::factory( std::string("GetConfig") );
+  Message::Ptr m = Message::factory( std::string("GetConfig") );
 
   if (fields.hasField("WithCurrent")) m->setField("WithCurrent", fields.getField("WithCurrent"));
   if (fields.hasField("WithDefault")) m->setField("WithDefault", fields.getField("WithDefault"));
@@ -251,105 +262,171 @@ Node::getConfig(const AdditionalFields& fields)
   if (fields.hasField("WithShortDescription")) m->setField("WithShortDescription", fields.getField("WithShortDescription"));
   if (fields.hasField("WithLongDescription")) m->setField("WithLongDescription", fields.getField("WithLongDescription"));
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the ConfigData");
-  job->wait(0);
-  log().log(DEBUG, "ConfigData received");
+  log().log(DEBUG, "waiting for ConfigData message");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
-Node::modifyConfig(Message::MessagePtr m)
+FCPOneMessageResponse::Ptr
+Node::modifyConfig(Message::Ptr m)
 {
   if (m->getHeader() != "ModifyConfig")
-    throw new std::logic_error("ModifyConfig message expected, " + m->getHeader() + " received");
+    throw std::logic_error("ModifyConfig message expected, " + m->getHeader() + " received");
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the ConfigData");
-  job->wait(0);
-  log().log(DEBUG, "ConfigData received");
+  log().log(DEBUG, "waiting for ConfigData message");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPTestDDAReplyResponse::FCPTestDDAReplyResponsePtr
+FCPTestDDAReplyResponse::Ptr
 Node::testDDARequest(std::string dir, bool read, bool write)
 {
-  Message::MessagePtr m = Message::factory( std::string("TestDDARequest") );
+  Message::Ptr m = Message::factory( std::string("TestDDARequest") );
 
   m->setField("Directory", dir);
-  m->setField("WantReadDirectory", boost::lexical_cast<std::string>(read));
-  m->setField("WantWriteDirectory", boost::lexical_cast<std::string>(write));
+  if (read)
+    m->setField("WantReadDirectory", "true");
+  if (write)
+    m->setField("WantWriteDirectory", "true");
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the TestDDAReply");
-  job->wait(0);
-  log().log(DEBUG, "TestDDAReply received");
+  log().log(DEBUG, "waiting for TestDDAReply");
+  job->wait(globalCommandsTimeout);
 
+  Response resp = job->getResponse();
   // check if protocol error has occured
-  checkProtocolError(job); // throws
+  checkProtocolError(resp); // throws
 
-  return boost::dynamic_pointer_cast<FCPTestDDAReplyResponse, FCPResult>(job->getResult());
+
+  return boost::dynamic_pointer_cast<FCPTestDDAReplyResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
 }
 
-FCPOneMessageResponse::FCPOneMessageResponsePtr
+FCPTestDDAResponse
 Node::testDDAResponse(std::string dir, std::string readContent)
 {
-  Message::MessagePtr m = Message::factory( std::string("TestDDAResponse") );
+  Message::Ptr m = Message::factory( std::string("TestDDAResponse") );
 
   m->setField("Directory", dir);
   if (readContent != "")
     m->setField("ReadContent", readContent);
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( "__global", m, false, false, false, 0 );
-
-  log().log(DEBUG, "waiting for the TestDDA");
-  job->wait(0);
-  log().log(DEBUG, "TestDDAResponse received");
-
-  // check if protocol error has occured
-  checkProtocolError(job); // throws
-
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
-}
-
-FCPOneMessageResponse::FCPOneMessageResponsePtr
-Node::generateSSK(std::string identifier)
-{
-  Message::MessagePtr m = Message::factory( std::string("GenerateSSK") );
-  m->setField("Identifier", identifier);
-
-  JobTicket::JobTicketPtr job = JobTicket::factory( identifier, m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for SSKKeypair");
-  job->wait(0);
-  log().log(DEBUG, "SSKKeypair arrived");
+  log().log(DEBUG, "waiting for TestDDAComplete");
+  job->wait(globalCommandsTimeout);
 
-  checkProtocolError(job); // throws
+  Response resp = job->getResponse();
 
-  return boost::dynamic_pointer_cast<FCPOneMessageResponse, FCPResult>(job->getResult());
+  // check if protocol error has occured
+  checkProtocolError(resp); // throws
+
+
+  FCPOneMessageResponse::Ptr response =
+     boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                 FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+
+  m = response->getMessage();
+  return FCPTestDDAResponse(m->getField("Directory"),
+                            m->getField("ReadDirectoryAllowed")=="true",
+                            m->getField("WriteDirectoryAllowed")=="true");
 }
 
-FCPMultiMessageResponse::FCPMultiMessageResponsePtr
-Node::putData(const std::string URI, const std::string data, const std::string id, const AdditionalFields& fields )
+FCPTestDDAResponse
+Node::testDDA(std::string dir, bool read, bool write)
 {
-  Message::MessagePtr m = Message::factory( std::string("ClientPut"), true );
+   FCPTestDDAReplyResponse::Ptr replyResponse;
+   Message::Ptr m;
+
+   try
+   {
+     replyResponse = testDDARequest(dir, read, write);
+
+     std::ostringstream readContent;
+     if (read) {
+       std::ifstream is(replyResponse->getReadFilename().c_str());
+       // check that file is opened
+       if (is) {
+         readContent << is.rdbuf();
+       }
+     }
+     if (write) {
+       std::ofstream os(replyResponse->getWriteFilename().c_str());
+       if (os) {
+         os << replyResponse->getContent();;
+         os.close();
+       }
+     }
+     FCPTestDDAResponse ret = testDDAResponse(dir, readContent.str());
+     //TODO: delete created file
+     return ret;
+   }
+   catch (FCPException& e)
+   {
+     log().log(ERROR, e.getMessage()->toString());
+     return FCPTestDDAResponse(dir, false, false);
+   }
+   catch (std::logic_error& e)
+   {
+     log().log(FATAL, e.what()); // this should never happen... TODO: should I force shutdown?
+     return FCPTestDDAResponse(dir, false, false);
+   }
+   catch (std::runtime_error& e)
+   {
+     log().log(ERROR, e.what());
+     return FCPTestDDAResponse(dir, false, false);
+   }
+   catch (std::exception& e)
+   {
+     log().log(ERROR, e.what());
+     return FCPTestDDAResponse(dir, false, false);
+   }
+}
+
+FCPOneMessageResponse::Ptr
+Node::generateSSK(std::string identifier)
+{
+  Message::Ptr m = Message::factory( std::string("GenerateSSK") );
+  m->setField("Identifier", identifier);
+
+  JobTicket::Ptr job = JobTicket::factory( identifier, m, false);
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for SSKKeypair message");
+  job->wait(globalCommandsTimeout);
+
+  Response resp = job->getResponse();
+  checkProtocolError(resp); // throws
+
+  return boost::dynamic_pointer_cast<FCPOneMessageResponse,
+                                     FCPResult>( FCPResult::factory( job->getCommandName(), resp ) );
+}
+
+JobTicket::Ptr
+Node::putData(const std::string URI, std::istream* s, int dataLength, const std::string id, const AdditionalFields& fields )
+{
+  Message::Ptr m = Message::factory( std::string("ClientPut"), true );
 
   m->setField("URI", URI);
   m->setField("Identifier", id == "" ? _getUniqueId() : id);
@@ -365,23 +442,19 @@ Node::putData(const std::string URI, const std::string data, const std::string i
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
   m->setField("UploadFrom", "direct");
-  m->setField("Data", data);
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( m->getField("Identifier"), m, false, false, false, 0 );
-  log().log(DEBUG, job->toString());
+  m->setStream(s, dataLength);
+
+  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the put successful");
-  job->wait(0);
-  log().log(DEBUG, "put successful arrived");
-
-  return boost::dynamic_pointer_cast<FCPMultiMessageResponse, FCPResult>(job->getResult());
+  return job;
 }
 
-FCPMultiMessageResponse::FCPMultiMessageResponsePtr
+JobTicket::Ptr
 Node::putRedirect(const std::string URI, const std::string target, const std::string id, const AdditionalFields& fields )
 {
-  Message::MessagePtr m = Message::factory( std::string("ClientPut"));
+  Message::Ptr m = Message::factory( std::string("ClientPut"));
 
   m->setField("URI", URI);
   m->setField("Identifier", id == "" ? _getUniqueId() : id);
@@ -396,13 +469,9 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
   m->setField("TargetURI", target);
 
-  JobTicket::JobTicketPtr job = JobTicket::factory( m->getField("Identifier"), m, false, false, false, 0 );
+  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for the put successful");
-  job->wait(0);
-  log().log(DEBUG, "put successful arrived");
-
-  return boost::dynamic_pointer_cast<FCPMultiMessageResponse, FCPResult>(job->getResult());
+  return job;
 }

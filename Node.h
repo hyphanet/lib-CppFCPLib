@@ -13,48 +13,71 @@
 #include "FCPMultiMessageResponse.h"
 #include "FCPOneMessageResponse.h"
 #include "FCPTestDDAReplyResponse.h"
+#include "FCPTestDDAResponse.h"
 #include "AdditionalFields.h"
 
 namespace FCPLib {
 class Node {
   std::string name;
   ZThread::CountedPtr< JobTicketQueue > clientReqQueue;
-  NodeThread *nodeThread;
+  NodeThread* nodeThread;
   ZThread::ThreadedExecutor executor;
+
+  int globalCommandsTimeout;
 
   static std::string _getUniqueId();
 
-  void checkProtocolError(JobTicket::JobTicketPtr &job);
-  Message::MessagePtr nodeHelloMessage;
+  void checkProtocolError(Response &resp);
+  Message::Ptr nodeHelloMessage;
 public:
   Node(std::string name, std::string host, int port);
   ~Node();
 
-  const Message::MessagePtr getNodeHelloMessage() const;
+  int getGlobalCommandsTimeout() const {
+    return globalCommandsTimeout;
+  }
 
-  FCPMultiMessageResponse::FCPMultiMessageResponsePtr listPeers(const AdditionalFields& = AdditionalFields());
-  FCPMultiMessageResponse::FCPMultiMessageResponsePtr listPeerNotes(const std::string&);
-  void addPeer(const std::string &, bool isURL);
-  void addPeer(const std::map<std::string, std::string> &message);
-  FCPOneMessageResponse::FCPOneMessageResponsePtr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
-  FCPOneMessageResponse::FCPOneMessageResponsePtr modifyPeerNote(const std::string &, const std::string &, int);
-  FCPOneMessageResponse::FCPOneMessageResponsePtr removePeer(const std::string &);
-  FCPOneMessageResponse::FCPOneMessageResponsePtr getNode(const AdditionalFields& = AdditionalFields());
-  FCPOneMessageResponse::FCPOneMessageResponsePtr getConfig(const AdditionalFields& = AdditionalFields());
-  FCPOneMessageResponse::FCPOneMessageResponsePtr modifyConfig(Message::MessagePtr m);
-  FCPTestDDAReplyResponse::FCPTestDDAReplyResponsePtr testDDARequest(std::string dir, bool read, bool write);
-  FCPOneMessageResponse::FCPOneMessageResponsePtr  testDDAResponse(std::string dir, std::string readContent = "");
-  FCPOneMessageResponse::FCPOneMessageResponsePtr generateSSK(std::string identifier);
-  FCPMultiMessageResponse::FCPMultiMessageResponsePtr putData(const std::string , // URI
-                                                              const std::string , // Data
-                                                              const std::string = "", // Identifier
-                                                              const AdditionalFields& = AdditionalFields()
-                                                              );
-  FCPMultiMessageResponse::FCPMultiMessageResponsePtr putRedirect(const std::string , // URI
-                                                                  const std::string , // Target
-                                                                  const std::string = "", // Identifier
-                                                                  const AdditionalFields& = AdditionalFields()
-                                                                  );
+  Node& setGlobalCommandsTimeout(int t) {
+    globalCommandsTimeout = t; return *this;
+  }
+
+  bool isAlive() const {
+    return nodeThread->isAlive();
+  }
+
+  std::exception getFailure() const {
+    return *nodeThread->getFailure();
+  }
+
+  const Message::Ptr getNodeHelloMessage() const;
+
+  FCPMultiMessageResponse::Ptr listPeers(const AdditionalFields& = AdditionalFields());
+  FCPMultiMessageResponse::Ptr listPeerNotes(const std::string&);
+  FCPOneMessageResponse::Ptr addPeer(const std::string &, bool isURL);
+  FCPOneMessageResponse::Ptr addPeer(const std::map<std::string, std::string> &message);
+  FCPOneMessageResponse::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
+  FCPOneMessageResponse::Ptr modifyPeerNote(const std::string &, const std::string &, int);
+  FCPOneMessageResponse::Ptr removePeer(const std::string &);
+  Message::Ptr getNode(const AdditionalFields& = AdditionalFields());
+  FCPOneMessageResponse::Ptr getConfig(const AdditionalFields& = AdditionalFields());
+  FCPOneMessageResponse::Ptr modifyConfig(Message::Ptr m);
+
+  FCPTestDDAReplyResponse::Ptr testDDARequest(std::string dir, bool read, bool write);
+  FCPTestDDAResponse testDDAResponse(std::string dir, std::string readContent = "");
+  FCPTestDDAResponse testDDA(std::string dir, bool read, bool write);
+
+  FCPOneMessageResponse::Ptr generateSSK(std::string identifier);
+  JobTicket::Ptr putData(const std::string , // URI
+                                  std::istream*, // Data Stream
+                                  int, // dataLength
+                                  const std::string = "", // Identifier
+                                  const AdditionalFields& = AdditionalFields()
+                                  );
+  JobTicket::Ptr putRedirect(const std::string , // URI
+                                      const std::string , // Target
+                                      const std::string = "", // Identifier
+                                      const AdditionalFields& = AdditionalFields()
+                                      );
 };
 }
 

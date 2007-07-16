@@ -9,30 +9,19 @@ using namespace ZThread;
 
 NodeThread::NodeThread(std::string &host,
                        int port,
-                       ZThread::CountedPtr<TQueue<JobTicket::JobTicketPtr> > &clientReqQueue_) throw()
+                       ZThread::CountedPtr<TQueue<JobTicket::Ptr> > clientReqQueue_) throw()
   : clientReqQueue(clientReqQueue_),
     host_(host),
     port_(port),
+    s(new Server( host_, port_ )),
     isAlive_(true),
-    jobs( new std::map<std::string, JobTicket::JobTicketPtr>() )
+    jobs( new std::map<std::string, JobTicket::Ptr>() )
 {
 }
 
 void NodeThread::run(){
-  // create server
-  try {
-    s = boost::shared_ptr<Server> (new Server( host_, port_ ));
-  }
-  catch (std::exception& e) {
-    log().log(ERROR, "_mgrThread: serverFail");
-    log().log(ERROR, e.what());
-    isAlive_ = false;
-    exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
-    return;
-  }
-
-  ServerMessage::ServerMessagePtr m;
-  JobTicket::JobTicketPtr job;
+  ServerMessage::Ptr m;
+  JobTicket::Ptr job;
   log().log(DETAIL, "FCPNode: manager thread starting");
   try {
     while (!Thread::interrupted()) {
@@ -46,31 +35,42 @@ void NodeThread::run(){
         doMessage(m);
       }
       //check for incoming message from client
+      log().log(NOISY, "_mgrThread: Testing for incoming req");
       if (!clientReqQueue->empty()){
         log().log(DEBUG, "_mgrThread: Got incoming client req");
         job = clientReqQueue->get();
         log().log(DEBUG, "_mgrThread: Got incoming client req from the queue");
-        log().log(DEBUG, job->toString());
+        log().log(NOISY, job->toString());
         sendClientReq(job);
       }
-      Thread::sleep(100);
+      Thread::sleep(100);  // do I need this?
     }
   } catch (ZThread::Synchronization_Exception& e) {
-    log().log(DEBUG, "_mgrThread: Caught Synchronization_Exception");
-//    isAlive_ = false;
-//    exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
+    log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
+    isAlive_ = false;
+    exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e.what()) );
+    return;
+  } catch (std::runtime_error& e) {
+    log().log(ERROR, "_mgrThreag: Caught std::runtime_error");
+    isAlive_ = false;
+    exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e) );
     return;
   } catch (std::exception& e) {
-    log().log(DEBUG, "_mgrThreag: Caught std::exception");
+    log().log(ERROR, "_mgrThreag: Caught std::exception");
     isAlive_ = false;
     exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
     return;
+  } catch (...) {
+    log().log(ERROR, "_mgrThreag: Caught something else");
+    isAlive_ = false;
+    return;
   }
   // TODO: catch more specific exceptions as well
+  // TODO: what does happen to this object when exception is thrown?
 }
 
 void
-NodeThread::sendClientReq(JobTicket::JobTicketPtr &job)
+NodeThread::sendClientReq(JobTicket::Ptr job)
 {
   log().log(NOISY, "sendClientReq : top");
   if (job->getCommandName() != "WatchGlobal") {
@@ -85,10 +85,10 @@ NodeThread::sendClientReq(JobTicket::JobTicketPtr &job)
 }
 
 void
-NodeThread::doMessage(ServerMessage::ServerMessagePtr &message)
+NodeThread::doMessage(ServerMessage::Ptr message)
 {
-  JobTicket::JobTicketPtr job;
-  std::map<std::string, JobTicket::JobTicketPtr>::iterator it;
+  JobTicket::Ptr job;
+  std::map<std::string, JobTicket::Ptr>::iterator it;
 
   it = jobs->find(message->getIdOfJob());
   if (it == jobs->end()) {
@@ -97,9 +97,12 @@ NodeThread::doMessage(ServerMessage::ServerMessagePtr &message)
   }
 
   job = it->second;
-  job->nodeResponse.push_back(message);
-  if (message->isLast(job->getCommandName())) {
+
+  if ( message->isLast( job->getCommandName() ) ) {
+    job->putResponse(1, message);
     job->putResult();
   }
+  else
+    job->putResponse(0, message);
 }
 

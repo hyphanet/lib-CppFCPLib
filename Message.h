@@ -27,18 +27,19 @@ protected:
   {}
 
 public:
-  typedef boost::shared_ptr<Message> MessagePtr;
+  typedef boost::shared_ptr<Message> Ptr;
 
-  static Message::MessagePtr factory(std::string header, bool isData=false);
+  static Message::Ptr factory(std::string header, bool isData=false);
 
   void setField(std::string key, std::string value);
   void setFields(const std::map<std::string, std::string> &fields);
   const std::string getField(std::string key) const;
   const std::string& getHeader() const;
 
+  virtual void setStream(std::istream* s_, int dataLength);
   virtual const std::string& toString();
-  virtual void toStream(std::ostream&);
   virtual void toSocket(boost::asio::ip::tcp::socket& socket);
+
   virtual ~Message() {}
 };
 
@@ -48,10 +49,12 @@ class DataMessage : public Message {
 protected:
   DataMessage() { isDataType = true; }
 public:
+  typedef boost::shared_ptr<DataMessage> Ptr;
+
   void setStream(std::istream* s_, int dataLength);
   const std::string& toString();
-  void toStream(std::ostream&);
   void toSocket(boost::asio::ip::tcp::socket& socket);
+
   ~DataMessage() {}
   friend class Message;
 };

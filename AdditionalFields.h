@@ -29,7 +29,7 @@ public:
     std::map<std::string, std::string>::const_iterator it;
     it = fields.find(key);
     if (it == fields.end())
-      throw new std::invalid_argument("Additional fields object does not contain: " + key);
+      throw std::invalid_argument("Additional fields object does not contain: " + key);
     return it->second;
   }
 };

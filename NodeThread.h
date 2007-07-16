@@ -16,7 +16,7 @@ namespace FCPLib {
 
 class Node;
 
-typedef TQueue< JobTicket::JobTicketPtr > JobTicketQueue;
+typedef TQueue< JobTicket::Ptr > JobTicketQueue;
 
 class NodeThread : public ZThread::Runnable {
   ZThread::CountedPtr< JobTicketQueue > clientReqQueue;
@@ -27,13 +27,13 @@ class NodeThread : public ZThread::Runnable {
   bool isAlive_;
   ZThread::CountedPtr<std::exception> exception;
 
-  ZThread::CountedPtr< std::map<std::string, JobTicket::JobTicketPtr > > jobs;
+  ZThread::CountedPtr< std::map<std::string, JobTicket::Ptr > > jobs;
 
   friend class Node;
-  NodeThread(std::string &host, int port, ZThread::CountedPtr< JobTicketQueue > &clientReqQueue_) throw();
+  NodeThread(std::string &host, int port, ZThread::CountedPtr< JobTicketQueue > clientReqQueue_) throw();
 
-  void sendClientReq(JobTicket::JobTicketPtr &job);
-  void doMessage(ServerMessage::ServerMessagePtr &message);
+  void sendClientReq(JobTicket::Ptr job);
+  void doMessage(ServerMessage::Ptr message);
 public:
   void run();
   bool isAlive() const {

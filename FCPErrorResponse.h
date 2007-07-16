@@ -13,16 +13,16 @@ namespace FCPLib {
 class FCPErrorResponse : public FCPResult {
 
 protected:
-  std::vector<ServerMessage::ServerMessagePtr> messages;
+  std::vector<ServerMessage::Ptr> messages;
 
-  FCPErrorResponse( const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse)
+  FCPErrorResponse( const std::vector<ServerMessage::Ptr>& nodeResponse)
     : messages(nodeResponse)
   {
   }
 public:
-  typedef boost::shared_ptr<FCPErrorResponse> FCPErrorResponsePtr;
+  typedef boost::shared_ptr<FCPErrorResponse> Ptr;
 
-  const std::vector<ServerMessage::ServerMessagePtr>& getMessages() const {
+  const std::vector<ServerMessage::Ptr>& getMessages() const {
     return messages;
   }
   friend class FCPResult;

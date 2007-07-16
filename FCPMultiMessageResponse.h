@@ -14,17 +14,17 @@ namespace FCPLib {
 class FCPMultiMessageResponse : public FCPResult {
 
 protected:
-  std::vector<ServerMessage::ServerMessagePtr> messages;
+  std::vector<ServerMessage::Ptr> messages;
 
-  FCPMultiMessageResponse( const std::vector<ServerMessage::ServerMessagePtr> &nodeResponse, bool removeLast = true ) {
+  FCPMultiMessageResponse( const std::vector<ServerMessage::Ptr> &nodeResponse, bool removeLast = true ) {
     messages = nodeResponse;
     if (removeLast)
       messages.pop_back();
   }
 public:
-  typedef boost::shared_ptr<FCPMultiMessageResponse> FCPMultiMessageResponsePtr;
+  typedef boost::shared_ptr<FCPMultiMessageResponse> Ptr;
 
-  const std::vector<ServerMessage::ServerMessagePtr>& getMessages() const {
+  const std::vector<ServerMessage::Ptr>& getMessages() const {
     return messages;
   }
   friend class FCPResult;

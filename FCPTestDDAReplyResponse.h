@@ -7,27 +7,28 @@
 namespace FCPLib {
 
 class FCPTestDDAReplyResponse : public FCPOneMessageResponse {
-  FCPTestDDAReplyResponse(Message::MessagePtr message_) : FCPOneMessageResponse(message_) {}
+  FCPTestDDAReplyResponse(Message::Ptr message_) : FCPOneMessageResponse(message_) {}
 
   const std::string& getField(std::string field) const {
     const std::string& ret = message->getField(field);
     if (ret == "")
-      throw new std::logic_error("TestDDAReply does not contain " + field + " field.");
+      throw std::logic_error("TestDDAReply does not contain " + field + " field.");
+    return ret;
   }
 public:
-  typedef boost::shared_ptr<FCPTestDDAReplyResponse> FCPTestDDAReplyResponsePtr;
+  typedef boost::shared_ptr<FCPTestDDAReplyResponse> Ptr;
 
   const std::string getDirectory() const throw(std::logic_error){
     return message->getField("Directory");
   }
-  const std::string& getReadFilename() const throw(std::logic_error){
+  const std::string getReadFilename() const throw(std::logic_error){
     return getField("ReadFilename");
   }
-  const std::string& getWriteFilename() const throw(std::logic_error){
+  const std::string getWriteFilename() const throw(std::logic_error){
     return getField("WriteFilename");
   }
-  const std::string& getContent () const throw(std::logic_error){
-    return getField("Content");
+  const std::string getContent () const throw(std::logic_error){
+    return getField("ContentToWrite");
   }
 
   friend class FCPResult;

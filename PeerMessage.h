@@ -23,7 +23,7 @@ public:
     else if (cmd == "ModifyPeer")
       return true;
 
-    throw new std::runtime_error("Unknown command");
+    throw std::runtime_error("Unknown command");
   }
 
   bool isError() const {

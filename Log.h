@@ -35,6 +35,6 @@ public:
 
 }
 
-FCPLib::Logger& log(ostream &out_=cerr, FCPLib::verbosityLevel logLevel_=FCPLib::NOISY);
+FCPLib::Logger& log(ostream &out_=cerr, FCPLib::verbosityLevel logLevel_=FCPLib::DEBUG);
 
 #endif

@@ -10,7 +10,7 @@ int main()
   FCPLib::Message::Ptr m = n.getNode();
   std::cout << m->toString() ;
 
-  getchar ();
+  getchar();
 
   ///testDDA
 //  Node n("123", "", -1);

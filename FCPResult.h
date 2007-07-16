@@ -53,11 +53,6 @@ public:
 
 ///////////
 
-Message::Ptr
-getMessage(ServerMessage::Ptr sm) {
-  return Message::Ptr( sm->getMessage() );
-}
-
 struct MessageConverter {
   Message::Ptr
   operator()( Response &resp )
@@ -79,7 +74,10 @@ struct VectorConverter {
   operator()( Response &resp )
   {
     std::vector<Message::Ptr> ret = std::vector<Message::Ptr>( resp.responses.size() );
-    std::transform(resp.responses.begin(), resp.responses.end(), ret.begin(), getMessage);
+    for ( std::vector<ServerMessage::Ptr>::iterator it = resp.responses.begin();
+          it != resp.responses.end();
+          ++it )
+      ret.push_back( Message::Ptr( (*it)->getMessage() ) );
     return ret;
   }
 };
@@ -88,9 +86,12 @@ struct VectorWithoutLastConverter {
   std::vector<Message::Ptr>
   operator()( Response &resp )
   {
-    int numToCopy = resp.responses.size();
+    int numToCopy = resp.responses.size() - 1;
     std::vector<Message::Ptr> ret = std::vector<Message::Ptr>( numToCopy );
-    std::transform(resp.responses.begin(), resp.responses.begin() + numToCopy, ret.begin(), getMessage);
+    for ( std::vector<ServerMessage::Ptr>::iterator it = resp.responses.begin();
+          it != resp.responses.begin() + numToCopy;
+          ++it )
+      ret.push_back( Message::Ptr( (*it)->getMessage() ) );
     return ret;
   }
 };

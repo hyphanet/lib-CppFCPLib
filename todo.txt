@@ -14,6 +14,7 @@ Todo
 *  create examples, tests
 *  what should be status for the callback function
 *  what do you do with close connection message?
+*  update IsLastPeer
 
 Questions
 =========

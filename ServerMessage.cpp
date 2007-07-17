@@ -1,32 +1,8 @@
 
 #include "Log.h"
 #include "ServerMessage.h"
-#include "PeerNoteMessage.h"
-#include "EndMessage.h"
-#include "PeerMessage.h"
-#include "NodeHelloMessage.h"
-#include "PeerRemovedMessage.h"
-#include "NodeDataMessage.h"
-#include "ConfigDataMessage.h"
-#include "SimpleProgressMessage.h"
-#include "StartedCompressionMessage.h"
-#include "FinishedCompressionMessage.h"
-#include "PutSuccessfulMessage.h"
-#include "URIGeneratedMessage.h"
-#include "PutFailedMessage.h"
-#include "GetFailedMessage.h"
-#include "ProtocolErrorMessage.h"
-#include "IdentifierCollisionMessage.h"
-#include "UnknownNodeIdentifierMessage.h"
-#include "UnknownPeerNoteTypeMessage.h"
-#include "PersistentRequestRemovedMessage.h"
-#include "TestDDACompleteMessage.h"
-#include "TestDDAReplyMessage.h"
-#include "SSKKeypairMessage.h"
-#include "CloseConnectionDuplicateNameMessage.h"
 
 using namespace FCPLib;
-
 
 ServerMessage::Ptr
 ServerMessage::factory(boost::shared_ptr<Server> s){

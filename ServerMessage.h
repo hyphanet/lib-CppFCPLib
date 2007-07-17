@@ -4,6 +4,7 @@
 #include "Message.h"
 #include "Server.h"
 #include <exception>
+#include <string>
 
 namespace FCPLib {
 
@@ -25,6 +26,104 @@ public:
   const std::string& toString() const;
   const Message::Ptr getMessage() const { return message; }
 };
+
+
+
+template<bool isLast>
+struct IsLastT {
+  bool operator()(const std::string &cmd) const {
+    return isLast;
+  };
+};
+typedef IsLastT<true> IsLastTrue;
+typedef IsLastT<false> IsLastFalse;
+
+struct IsLastPeer {
+  bool operator()(const std::string &cmd) const {
+    if (cmd == "ListPeers")
+      return false;
+    else if (cmd == "ModifyPeer")
+      return true;
+    //TODO: this is not all
+    throw std::runtime_error("Unknown command");
+  }
+};
+
+struct IsLastPeerNote {
+  bool operator()(const std::string &cmd) const {
+    if (cmd == "ListPeerNotes")
+      return false;
+    else if (cmd == "ModifyPeerNote")
+      return true;
+    //TODO: check if this is all
+    throw std::runtime_error("Unknown command");
+  }
+};
+
+
+struct GlobalIdOfJob {
+  inline std::string operator()(const std::string& id){
+    return "__global";
+  }
+};
+struct HelloIdOfJob {
+  inline std::string operator()(const std::string& id){
+    return "__hello";
+  }
+};
+struct IdentifierIdOfJob {
+  inline std::string operator()(const std::string& id){
+    return  id.size() ? id : "__global";
+  }
+};
+
+template<typename IdOfJobT, typename isLastT = IsLastTrue, bool isErrorT = false>
+class ServerMessageT : public ServerMessage {
+  ServerMessageT() {}
+public:
+  inline std::string getIdOfJob() const {
+    return IdOfJobT()(message->getField("Identifier"));
+  }
+  bool isLast(const std::string &cmd) const {
+    return isLastT()( cmd );
+  }
+  bool isError() const {
+    return isErrorT;
+  }
+  friend class ServerMessage;
+};
+
+typedef class ServerMessageT<HelloIdOfJob, IsLastTrue, false> NodeHelloMessage;
+typedef class ServerMessageT<HelloIdOfJob, IsLastTrue, true> CloseConnectionDuplicateNameMessage;
+
+typedef class ServerMessageT<GlobalIdOfJob, IsLastPeer, false> PeerMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastPeerNote, false> PeerNoteMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> PeerRemovedMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> EndMessage;
+
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> NodeDataMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> ConfigDataMessage;
+
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> TestDDAReplyMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> TestDDACompleteMessage;
+
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, false> SSKKeypairMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> URIGeneratedMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, false> PutSuccessfulMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> StartedCompressionMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> SimpleProgressMessage;
+
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> FinishedCompressionMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentRequestRemovedMessage; // ????
+
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> PutFailedMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> GetFailedMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> ProtocolErrorMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> IdentifierCollisionMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, true> UnknownNodeIdentifierMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, true> UnknownPeerNoteTypeMessage;
+
+
 
 }
 

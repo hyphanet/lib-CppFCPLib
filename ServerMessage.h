@@ -27,6 +27,7 @@ public:
   const Message::Ptr getMessage() const { return message; }
 };
 
+typedef std::vector<ServerMessage::Ptr> Response;
 
 
 template<bool isLast>
@@ -44,7 +45,11 @@ struct IsLastPeer {
       return false;
     else if (cmd == "ModifyPeer")
       return true;
-    //TODO: this is not all
+    else if (cmd == "AddPeer")
+      return true;
+    else if (cmd == "ListPeer")
+      return true;
+    //TODO: check if this is all
     throw std::runtime_error("Unknown command");
   }
 };
@@ -66,11 +71,7 @@ struct GlobalIdOfJob {
     return "__global";
   }
 };
-struct HelloIdOfJob {
-  inline std::string operator()(const std::string& id){
-    return "__hello";
-  }
-};
+
 struct IdentifierIdOfJob {
   inline std::string operator()(const std::string& id){
     return  id.size() ? id : "__global";
@@ -93,8 +94,8 @@ public:
   friend class ServerMessage;
 };
 
-typedef class ServerMessageT<HelloIdOfJob, IsLastTrue, false> NodeHelloMessage;
-typedef class ServerMessageT<HelloIdOfJob, IsLastTrue, true> CloseConnectionDuplicateNameMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> NodeHelloMessage;
+typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, true> CloseConnectionDuplicateNameMessage;
 
 typedef class ServerMessageT<GlobalIdOfJob, IsLastPeer, false> PeerMessage;
 typedef class ServerMessageT<GlobalIdOfJob, IsLastPeerNote, false> PeerNoteMessage;

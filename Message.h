@@ -5,6 +5,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <ostream>
 #include <istream>
 #include <boost/shared_ptr.hpp>
@@ -58,6 +59,8 @@ public:
   ~DataMessage() {}
   friend class Message;
 };
+
+typedef std::vector<Message::Ptr> MessagePtrContainer;
 
 }
 

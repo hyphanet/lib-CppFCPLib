@@ -48,7 +48,7 @@ Node::Node(std::string name_, std::string host, int port)
   m->setField("Name", name);
   m->setField("ExpectedVersion", "2.0");
 
-  JobTicket::Ptr job = JobTicket::factory("__hello", m, false);
+  JobTicket::Ptr job = JobTicket::factory("__global", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "Node constructor: waiting for response to ClientHello");
@@ -66,7 +66,27 @@ Node::~Node()
   executor.interrupt();
 }
 
-std::vector<Message::Ptr>
+Message::Ptr
+Node::listPeer(const std::string & identifier)
+{
+  Message::Ptr m = Message::factory( std::string("ListPeer") );
+
+  m->setField("NodeIdentifier", identifier);
+
+  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for Peer message");
+  job->wait(globalCommandsTimeout);
+
+  Response resp = job->getResponse();
+  // ProtocolError or UnknownNodeIdentifier
+  checkProtocolError(resp); // throws
+
+  return createResult<Message::Ptr, MessageConverter>( resp );
+}
+
+MessagePtrContainer
 Node::listPeers(const AdditionalFields& fields)
 {
   Message::Ptr m = Message::factory( std::string("ListPeers") );
@@ -83,10 +103,10 @@ Node::listPeers(const AdditionalFields& fields)
   // NOTE: error should never happen here...
   checkProtocolError(resp); // throws
 
-  return createResult<std::vector<Message::Ptr>, VectorWithoutLastConverter>( resp );
+  return createResult<MessagePtrContainer, VectorWithoutLastConverter>( resp );
 }
 
-std::vector<Message::Ptr>
+MessagePtrContainer
 Node::listPeerNotes(const std::string& identifier)
 {
   Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
@@ -102,7 +122,7 @@ Node::listPeerNotes(const std::string& identifier)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return createResult<std::vector<Message::Ptr>, VectorWithoutLastConverter>( resp );
+  return createResult<MessagePtrContainer, VectorWithoutLastConverter>( resp );
 }
 
 Message::Ptr
@@ -209,7 +229,6 @@ Node::removePeer(const std::string &identifier)
   Response resp = job->getResponse();
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
-
 
   return createResult<Message::Ptr, MessageConverter>( resp );
 }

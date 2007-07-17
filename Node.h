@@ -48,8 +48,9 @@ public:
 
   const Message::Ptr getNodeHelloMessage() const;
 
-  std::vector<Message::Ptr> listPeers(const AdditionalFields& = AdditionalFields());
-  std::vector<Message::Ptr> listPeerNotes(const std::string&);
+  Message::Ptr listPeer(const std::string &);
+  MessagePtrContainer listPeers(const AdditionalFields& = AdditionalFields());
+  MessagePtrContainer listPeerNotes(const std::string&);
   Message::Ptr addPeer(const std::string &, bool isURL);
   Message::Ptr addPeer(const std::map<std::string, std::string> &message);
   Message::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());

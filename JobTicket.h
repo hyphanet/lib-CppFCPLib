@@ -20,18 +20,11 @@ namespace FCPLib {
 
 class NodeThread;
 
-class Response {
-public:
-  Response( std::vector<ServerMessage::Ptr> &r) : responses(r) {}
-
-  std::vector<ServerMessage::Ptr> responses;
-};
-
 class JobTicket {
   std::string id;
   Message::Ptr cmd;
 
-  std::vector<ServerMessage::Ptr> nodeResponse;
+  Response nodeResponse;
 
   bool keep;
 

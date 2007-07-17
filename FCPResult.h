@@ -64,7 +64,7 @@ struct MessageConverter {
   Message::Ptr
   operator()( Response &resp )
   {
-    return Message::Ptr( resp.responses.front()->getMessage() );
+    return Message::Ptr( resp.front()->getMessage() );
   }
 };
 
@@ -72,27 +72,27 @@ struct LastMessageConverter {
   ServerMessage::Ptr
   operator()( Response &resp )
   {
-    return ServerMessage::Ptr( resp.responses.back() );
+    return ServerMessage::Ptr( resp.back() );
   }
 };
 
 struct VectorConverter {
-  std::vector<Message::Ptr>
+  MessagePtrContainer
   operator()( Response &resp )
   {
-    std::vector<Message::Ptr> ret( resp.responses.size() ) ;
-    transform( resp.responses.begin(), resp.responses.end(), ret.begin(), GetMessage() );
+    MessagePtrContainer ret( resp.size() ) ;
+    transform( resp.begin(), resp.end(), ret.begin(), GetMessage() );
     return ret;
   }
 };
 
 struct VectorWithoutLastConverter {
-  std::vector<Message::Ptr>
+  MessagePtrContainer
   operator()( Response &resp )
   {
-    int numToCopy = resp.responses.size() - 1;
-    std::vector<Message::Ptr> ret = std::vector<Message::Ptr>( numToCopy );
-    transform( resp.responses.begin(), resp.responses.begin() + numToCopy, ret.begin(), GetMessage() );
+    int numToCopy = resp.size() - 1;
+    MessagePtrContainer ret = MessagePtrContainer( numToCopy );
+    transform( resp.begin(), resp.begin() + numToCopy, ret.begin(), GetMessage() );
     return ret;
   }
 };
@@ -101,7 +101,7 @@ struct TestDDAReplyConverter {
   TestDDAReplyResponse::Ptr
   operator()( Response &resp )
   {
-    return TestDDAReplyResponse::Ptr( new TestDDAReplyResponse(resp.responses.front()->getMessage()) );
+    return TestDDAReplyResponse::Ptr( new TestDDAReplyResponse(resp.front()->getMessage()) );
   }
 };
 

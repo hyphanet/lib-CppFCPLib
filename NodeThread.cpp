@@ -93,16 +93,34 @@ NodeThread::doMessage(ServerMessage::Ptr message)
   it = jobs->find(message->getIdOfJob());
   if (it == jobs->end()) {
     log().log(DETAIL, "doMessage : received " + message->toString() + ", cannot find " + message->getIdOfJob() + " in started jobs");
-    return;
+    /// message from global queue or error
+    Message::Ptr m = message->getMessage();
+    if ( m->getField("Identifier") == "" ) { // error
+      log().log(DEBUG, "doMessage : received error message");
+      // TODO: create a mean of passing error messages to client programme
+      return;
+    } else { // global queue, create a job
+      log().log(DEBUG, "doMessage : received message from a global queue");
+      JobTicket::Ptr job = JobTicket::factory(m->getField("Identifier"), m, false);
+      (*jobs)[m->getField("Identifier")] = job;
+      return;
+    }
   }
 
   job = it->second;
 
   if ( message->isLast( job->getCommandName() ) ) {
+    log().log(NOISY, "doMessage : last message for the job");
     job->putResponse(1, message);
     job->putResult();
+
+    if (!job->keep) {
+      log().log(NOISY, "doMessage : job should not be kept, erasing");
+      jobs->erase( it );
+    }
   }
-  else
+  else {
     job->putResponse(0, message);
+  }
 }
 

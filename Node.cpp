@@ -48,7 +48,7 @@ Node::Node(std::string name_, std::string host, int port)
   m->setField("Name", name);
   m->setField("ExpectedVersion", "2.0");
 
-  JobTicket::Ptr job = JobTicket::factory("__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory("", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "Node constructor: waiting for response to ClientHello");
@@ -73,7 +73,7 @@ Node::listPeer(const std::string & identifier)
 
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -93,7 +93,7 @@ Node::listPeers(const AdditionalFields& fields)
   if (fields.hasField("WithMetadata")) m->setField("WithMetadata", fields.getField("WithMetadata"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for EndListPeers message");
@@ -112,7 +112,7 @@ Node::listPeerNotes(const std::string& identifier)
   Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for EndListPeerNotes message");
@@ -133,7 +133,7 @@ Node::addPeer(const std::string &value, bool isURL = false) {
   else
     m->setField("URL", value);
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -153,7 +153,7 @@ Node::addPeer(const std::map<std::string, std::string> &message)
 
   m->setFields(message);
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -177,7 +177,7 @@ Node::modifyPeer(const std::string & nodeIdentifier,
   if (fields.hasField("IsDisabled")) m->setField("IsDisabled", fields.getField("IsDisabled"));
   if (fields.hasField("IsListenOnly")) m->setField("IsListenOnly", fields.getField("IsListenOnly"));
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -200,7 +200,7 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
   m->setField("NoteText", noteText);
   m->setField("PeerNoteType", "1");  // TODO: change to peerNoteType once it is used
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for PeerNote message");
@@ -220,7 +220,7 @@ Node::removePeer(const std::string &identifier)
 
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for PeerRemoved message");
@@ -241,7 +241,7 @@ Node::getNode(const AdditionalFields& fields)
   if (fields.hasField("WithPrivate")) m->setField("WithPrivate", fields.getField("WithPrivate"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for NodeData message");
@@ -267,7 +267,7 @@ Node::getConfig(const AdditionalFields& fields)
   if (fields.hasField("WithShortDescription")) m->setField("WithShortDescription", fields.getField("WithShortDescription"));
   if (fields.hasField("WithLongDescription")) m->setField("WithLongDescription", fields.getField("WithLongDescription"));
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for ConfigData message");
@@ -286,7 +286,7 @@ Node::modifyConfig(Message::Ptr m)
   if (m->getHeader() != "ModifyConfig")
     throw std::logic_error("ModifyConfig message expected, " + m->getHeader() + " received");
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for ConfigData message");
@@ -310,7 +310,7 @@ Node::testDDARequest(std::string dir, bool read, bool write)
   if (write)
     m->setField("WantWriteDirectory", "true");
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for TestDDAReply");
@@ -332,7 +332,7 @@ Node::testDDAResponse(std::string dir, std::string readContent)
   if (readContent != "")
     m->setField("ReadContent", readContent);
 
-  JobTicket::Ptr job = JobTicket::factory( "__global", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for TestDDAComplete");

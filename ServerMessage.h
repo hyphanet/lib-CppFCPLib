@@ -74,7 +74,7 @@ struct GlobalIdOfJob {
 
 struct IdentifierIdOfJob {
   inline std::string operator()(const std::string& id){
-    return  id.size() ? id : "__global";
+    return  id.size() ? id : "";
   }
 };
 

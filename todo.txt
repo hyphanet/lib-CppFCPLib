@@ -15,8 +15,10 @@ Todo
 *  what should be status for the callback function
 *  what do you do with close connection message?
 
+
 Questions
 =========
 
 *  how to use bug tracking tools and other stuff available for developers
 *  providing confirmation message
+*  what does ListPersistentRequests return?

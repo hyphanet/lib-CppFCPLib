@@ -3,10 +3,12 @@
 #include <typeinfo>
 #include <fstream>
 #include <sstream>
+#include <cstring>
 
 #include "Node.h"
 #include "Log.h"
 #include "Exceptions.h"
+#include "Base64.h"
 
 using namespace FCPLib;
 
@@ -456,11 +458,14 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
   if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
   if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
+  // does not use chkonly
   if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  // does not use dontcompress
   if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
   if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  m->setField("UploadFrom", "redirect");
   m->setField("TargetURI", target);
 
   JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
@@ -468,4 +473,105 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   clientReqQueue->put(job);
 
   return job;
+}
+
+JobTicket::Ptr
+Node::putDisk(const std::string URI, const std::string filename, const std::string id, const AdditionalFields& fields )
+{
+  std::string identifier = id == "" ? _getUniqueId() : id;
+
+  // try with TestDDA
+  // we want to read somethig from a filesystem
+
+  // extract dir
+  size_t pos = filename.find_last_of("/\\");
+  if ( pos == filename.npos )
+    throw std::logic_error("Path to a file does not contain directory");
+  std::string dir = std::string(filename, 0, pos);
+  TestDDAResponse r = this->testDDA(dir, true, false); // read only
+
+  std::string filehash ( fields.hasField("FileHash") ? fields.getField("FileHash") : "" );
+
+  if (!r.readDirectory && filehash == "") { // try hash
+    std::ifstream is(filename.c_str(), std::ios::binary);
+    if (!is.is_open()) {
+      log().log(ERROR, "Error while opening file :: " + filename);
+      throw std::runtime_error("Error while opening file.");
+    }
+    unsigned char buf[1024];
+
+    std::string salt = nodeHelloMessage->getField("ConnectionIdentifier") + "-" + identifier;
+    int salt_size = salt.size();
+    unsigned char *salt_ptr = new unsigned char[salt_size];
+    memcpy(salt_ptr, salt.c_str(), salt_size);
+
+    SHA256 sha;
+    sha.write(salt_ptr, salt_size);
+    delete [] salt_ptr;
+    while (true) {
+      int bytes_read;
+      is.read((char*)buf, 1024);
+      if (is.fail())
+        throw std::runtime_error("Error while reading file.");
+      bytes_read = is.gcount();
+      if (!bytes_read) break;
+      sha.write(buf, bytes_read);
+    }
+    sha.final();
+    filehash =  Base64::base64Encode(sha.read(), 32);
+  }
+
+  Message::Ptr m = Message::factory( std::string("ClientPut") );
+
+  m->setField("URI", URI);
+  m->setField("Identifier", identifier);
+  if (fields.hasField("mimetype")) m->setField("Metadata.ContentType", fields.getField("mimetype"));
+  if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
+  if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
+  if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
+  if (fields.hasField("GetCHKOnly")) m->setField("GetCHKOnly", fields.getField("GetCHKOnly"));
+  if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  if (fields.hasField("DontCompress")) m->setField("DontCompress", fields.getField("DontCompress"));
+  if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
+  if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
+  if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
+  if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  m->setField("UploadFrom", "disk");
+  m->setField("Filename", filename);
+  if (!r.readDirectory)
+    m->setField("FileHash", fields.getField("FileHash"));
+
+  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
+  log().log(DEBUG, job->toString());
+  clientReqQueue->put(job);
+
+  return job;
+}
+
+void
+Node::watchGlobal( bool enabled, int verbosity )
+{
+  Message::Ptr m = Message::factory( std::string("WatchGlobal") );
+  m->setField("Enabled", enabled ? "true" : "false");
+  m->setField("VerbosityMask", boost::lexical_cast<std::string>(verbosity));
+
+  JobTicket::Ptr job = JobTicket::factory( "", m, false );
+  clientReqQueue->put(job);
+}
+
+MessagePtrContainer
+Node::listPersistentRequest()
+{
+  Message::Ptr m = Message::factory( std::string("ListPersistentRequest") );
+  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  clientReqQueue->put(job);
+
+  log().log(DEBUG, "waiting for SSKKeypair message");
+  job->wait(globalCommandsTimeout);
+
+  Response resp = job->getResponse();
+  checkProtocolError(resp); // throws
+
+  // hmmm... this does not work probably as messages will contain Identifiers and will be assigned to other jobs...
+  return createResult<MessagePtrContainer, VectorWithoutLastConverter>( resp );
 }

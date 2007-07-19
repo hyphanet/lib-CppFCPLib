@@ -13,6 +13,8 @@
 #include "NodeThread.h"
 #include "AdditionalFields.h"
 
+#include "sha256.h"
+
 namespace FCPLib {
 class Node {
   std::string name;
@@ -26,6 +28,7 @@ class Node {
 
   void checkProtocolError(Response &resp);
   Message::Ptr nodeHelloMessage;
+
 public:
   Node(std::string name, std::string host, int port);
   ~Node();
@@ -76,6 +79,14 @@ public:
                                       const std::string = "", // Identifier
                                       const AdditionalFields& = AdditionalFields()
                                       );
+  JobTicket::Ptr putDisk(const std::string , // URI
+                         const std::string , // Filename
+                         const std::string = "", // Identifier
+                         const AdditionalFields& = AdditionalFields()
+                         );
+
+  void watchGlobal( bool enabled, int verbosity );
+  MessagePtrContainer listPersistentRequest();
 };
 }
 

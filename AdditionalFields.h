@@ -19,7 +19,7 @@ public:
     fields[key] = value;
   }
   void addField(std::string key, bool value) {
-    fields[key] = boost::lexical_cast<std::string>(value);
+    fields[key] = value ? "true" : "false";
   }
   bool hasField(std::string key) const {
     if (fields.find(key) == fields.end()) return false;

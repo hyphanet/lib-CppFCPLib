@@ -36,7 +36,7 @@ class JobTicket {
   ZThread::Mutex access;
 
   ZThread::FastMutex lock;  // used to be able to wait until isFinished
-  ZThread::FastMutex reqSentLock;
+  ZThread::FastMutex reqSentLock; // wait until a confirm message is received
   int timeQueued;
 
   boost::function<void (int, const ServerMessage::Ptr)> f;
@@ -47,6 +47,8 @@ class JobTicket {
   {
     ZThread::Guard<ZThread::Mutex> g(access);
     if (f) f(status, m);
+    if (nodeResponse.empty())
+      reqSentLock.release(); // first message has arrived, so it has been successfully submitted
     nodeResponse.push_back(m);
   }
 
@@ -72,7 +74,7 @@ public:
   const Message::Ptr getCommand() const;
 
   void wait(unsigned int timeout_=0);
-  void waitTillReqSent();
+  void waitTillReqSent(unsigned int timeout);
 
   Response getResponse()
   {

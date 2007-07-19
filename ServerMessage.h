@@ -109,6 +109,10 @@ typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> TestDDAReplyMessa
 typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> TestDDACompleteMessage;
 
 typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, false> SSKKeypairMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentGetMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentPutMessage;
+typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentPutDirMessage;
+
 typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> URIGeneratedMessage;
 typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, false> PutSuccessfulMessage;
 typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> StartedCompressionMessage;

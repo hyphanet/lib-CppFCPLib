@@ -81,7 +81,6 @@ NodeThread::sendClientReq(JobTicket::Ptr job)
 
   s->send(job->getMessageText());
   job->timeQueued = (unsigned int) time(0);
-  job->reqSentLock.release();
 }
 
 void

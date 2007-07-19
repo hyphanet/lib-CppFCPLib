@@ -49,13 +49,13 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
     m = Ptr( new SSKKeypairMessage() );
   } else
   if (header == "PersistentGet") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new PersistentGetMessage() );
   } else
   if (header == "PersistentPut") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new PersistentPutMessage() );
   } else
   if (header == "PersistentPutDir") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new PersistentPutDirMessage() );
   } else
   if (header == "URIGenerated") {
     m = Ptr( new URIGeneratedMessage() );

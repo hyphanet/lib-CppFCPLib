@@ -86,9 +86,24 @@ JobTicket::wait(unsigned int timeout)
 }
 
 void
-JobTicket::waitTillReqSent()
+JobTicket::waitTillReqSent(unsigned int timeout)
 {
-  reqSentLock.acquire();
+  unsigned int then = (unsigned int) time(0);
+  unsigned int elapsed;
+  while (!reqSentLock.tryAcquire(100)){
+    elapsed = (unsigned int) time(0) - then;
+    if (elapsed < timeout){
+      ZThread::Thread::sleep(1000);
+      log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": job not dispatched, timeout in " +
+        boost::lexical_cast<std::string>(timeout-elapsed));
+      continue;
+    }
+    log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": timeout on send command");
+
+    // TODO: should I maybe create a result here, and then when retrieving
+    // result throw an exception??
+    throw std::runtime_error("command timeout");
+  }
 }
 
 const std::string&
@@ -101,7 +116,7 @@ JobTicket::toString()
   isReprValid = true;
 
   repr += "Job id=" + id + " " +
-             " keepJob=" + boost::lexical_cast<std::string>(keep) + "\n";
+             " keepJob=" + (keep ? "true" : "false") + "\n";
   repr += "Message=" + cmd->getHeader();
 
   // TODO:

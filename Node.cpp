@@ -1,5 +1,6 @@
 
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 #include <typeinfo>
 #include <fstream>
 #include <sstream>
@@ -485,10 +486,8 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   // we want to read somethig from a filesystem
 
   // extract dir
-  size_t pos = filename.find_last_of("/\\");
-  if ( pos == filename.npos )
-    throw std::logic_error("Path to a file does not contain directory");
-  std::string dir = std::string(filename, 0, pos);
+  boost::filesystem::path filePath( filename );
+  std::string dir = filePath.branch_path().string();
   TestDDAResponse r = this->testDDA(dir, true, false); // read only
 
   std::string filehash ( fields.hasField("FileHash") ? fields.getField("FileHash") : "" );

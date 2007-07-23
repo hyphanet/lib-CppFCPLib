@@ -9,6 +9,7 @@
 #include "Log.h"
 #include "Exceptions.h"
 #include "Base64.h"
+#include "Utils.h"
 
 using namespace FCPLib;
 
@@ -552,8 +553,8 @@ void
 Node::watchGlobal( bool enabled, int verbosity )
 {
   Message::Ptr m = Message::factory( std::string("WatchGlobal") );
-  m->setField("Enabled", enabled ? "true" : "false");
-  m->setField("VerbosityMask", boost::lexical_cast<std::string>(verbosity));
+  m->setField( "Enabled", Converter::toString( enabled ) );
+  m->setField( "VerbosityMask", boost::lexical_cast<std::string>(verbosity) );
 
   JobTicket::Ptr job = JobTicket::factory( "", m, false );
   clientReqQueue->put(job);

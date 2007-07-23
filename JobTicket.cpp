@@ -3,6 +3,7 @@
 #include "Log.h"
 
 #include <boost/lexical_cast.hpp>
+#include "Utils.h"
 
 
 using namespace FCPLib;
@@ -116,7 +117,7 @@ JobTicket::toString()
   isReprValid = true;
 
   repr += "Job id=" + id + " " +
-             " keepJob=" + (keep ? "true" : "false") + "\n";
+             " keepJob=" + Converter::toString( keep ) + "\n";
   repr += "Message=" + cmd->getHeader();
 
   // TODO:

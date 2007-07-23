@@ -5,6 +5,7 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 #include <exception>
+#include "Utils.h"
 
 namespace FCPLib {
 
@@ -19,7 +20,7 @@ public:
     fields[key] = value;
   }
   void addField(std::string key, bool value) {
-    fields[key] = value ? "true" : "false";
+    fields[key] = Converter::toString( value );
   }
   bool hasField(std::string key) const {
     if (fields.find(key) == fields.end()) return false;

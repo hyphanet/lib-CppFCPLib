@@ -91,7 +91,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
 
   it = jobs->find(message->getIdOfJob());
   if (it == jobs->end()) {
-    log().log(DETAIL, "doMessage : received " + message->toString() + ", cannot find " + message->getIdOfJob() + " in started jobs");
+    log().log(DETAIL, "doMessage : received " + message->getMessage()->getHeader() + ", cannot find " + message->getIdOfJob() + " in started jobs");
     /// message from global queue or error
     Message::Ptr m = message->getMessage();
     if ( m->getField("Identifier") == "" ) { // error

@@ -65,25 +65,13 @@ struct IsLastPeerNote {
   }
 };
 
-
-struct GlobalIdOfJob {
-  inline std::string operator()(const std::string& id){
-    return "__global";
-  }
-};
-
-struct IdentifierIdOfJob {
-  inline std::string operator()(const std::string& id){
-    return  id.size() ? id : "";
-  }
-};
-
-template<typename IdOfJobT, typename isLastT = IsLastTrue, bool isErrorT = false>
+template<typename isLastT = IsLastTrue, bool isErrorT = false>
 class ServerMessageT : public ServerMessage {
   ServerMessageT() {}
 public:
   inline std::string getIdOfJob() const {
-    return IdOfJobT()(message->getField("Identifier"));
+    std::string id = message->getField("Identifier");
+    return  id.size() ? id : "";
   }
   bool isLast(const std::string &cmd) const {
     return isLastT()( cmd );
@@ -94,39 +82,39 @@ public:
   friend class ServerMessage;
 };
 
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> NodeHelloMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, true> CloseConnectionDuplicateNameMessage;
+typedef class ServerMessageT<IsLastTrue, false> NodeHelloMessage;
+typedef class ServerMessageT<IsLastTrue, true> CloseConnectionDuplicateNameMessage;
 
-typedef class ServerMessageT<GlobalIdOfJob, IsLastPeer, false> PeerMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastPeerNote, false> PeerNoteMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> PeerRemovedMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> EndMessage;
+typedef class ServerMessageT<IsLastPeer, false> PeerMessage;
+typedef class ServerMessageT<IsLastPeerNote, false> PeerNoteMessage;
+typedef class ServerMessageT<IsLastTrue, false> PeerRemovedMessage;
+typedef class ServerMessageT<IsLastTrue, false> EndMessage;
 
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> NodeDataMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> ConfigDataMessage;
+typedef class ServerMessageT<IsLastTrue, false> NodeDataMessage;
+typedef class ServerMessageT<IsLastTrue, false> ConfigDataMessage;
 
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> TestDDAReplyMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, false> TestDDACompleteMessage;
+typedef class ServerMessageT<IsLastTrue, false> TestDDAReplyMessage;
+typedef class ServerMessageT<IsLastTrue, false> TestDDACompleteMessage;
 
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, false> SSKKeypairMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentGetMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentPutMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentPutDirMessage;
+typedef class ServerMessageT<IsLastTrue, false> SSKKeypairMessage;
+typedef class ServerMessageT<IsLastFalse, false> PersistentGetMessage;
+typedef class ServerMessageT<IsLastFalse, false> PersistentPutMessage;
+typedef class ServerMessageT<IsLastFalse, false> PersistentPutDirMessage;
 
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> URIGeneratedMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, false> PutSuccessfulMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> StartedCompressionMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> SimpleProgressMessage;
+typedef class ServerMessageT<IsLastFalse, false> URIGeneratedMessage;
+typedef class ServerMessageT<IsLastTrue, false> PutSuccessfulMessage;
+typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
+typedef class ServerMessageT<IsLastFalse, false> SimpleProgressMessage;
 
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> FinishedCompressionMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastFalse, false> PersistentRequestRemovedMessage; // ????
+typedef class ServerMessageT<IsLastFalse, false> FinishedCompressionMessage;
+typedef class ServerMessageT<IsLastFalse, false> PersistentRequestRemovedMessage; // ????
 
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> PutFailedMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> GetFailedMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> ProtocolErrorMessage;
-typedef class ServerMessageT<IdentifierIdOfJob, IsLastTrue, true> IdentifierCollisionMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, true> UnknownNodeIdentifierMessage;
-typedef class ServerMessageT<GlobalIdOfJob, IsLastTrue, true> UnknownPeerNoteTypeMessage;
+typedef class ServerMessageT<IsLastTrue, true> PutFailedMessage;
+typedef class ServerMessageT<IsLastTrue, true> GetFailedMessage;
+typedef class ServerMessageT<IsLastTrue, true> ProtocolErrorMessage;
+typedef class ServerMessageT<IsLastTrue, true> IdentifierCollisionMessage;
+typedef class ServerMessageT<IsLastTrue, true> UnknownNodeIdentifierMessage;
+typedef class ServerMessageT<IsLastTrue, true> UnknownPeerNoteTypeMessage;
 
 
 

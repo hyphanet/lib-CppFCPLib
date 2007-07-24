@@ -41,6 +41,11 @@ public:
     globalCommandsTimeout = t; return *this;
   }
 
+  void shutdown() {
+    log().log(DEBUG, "about to shutdown the node");
+    executor.interrupt();
+  }
+
   bool isAlive() const {
     return nodeThread->isAlive();
   }

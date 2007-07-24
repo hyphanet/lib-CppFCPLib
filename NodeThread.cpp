@@ -46,27 +46,38 @@ void NodeThread::run(){
       Thread::sleep(100);  // do I need this?
     }
   } catch (ZThread::Synchronization_Exception& e) {
+    // thread was interupted, normal way to shutdown the thread
+    // this object will be destroyed
     log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
-    isAlive_ = false;
-    exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e.what()) );
     return;
   } catch (std::runtime_error& e) {
+    // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::runtime_error");
     isAlive_ = false;
     exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e) );
-    return;
   } catch (std::exception& e) {
+    // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::exception");
     isAlive_ = false;
     exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
-    return;
   } catch (...) {
+    // thread is stopped and
     log().log(ERROR, "_mgrThreag: Caught something else");
     isAlive_ = false;
     return;
   }
-  // TODO: catch more specific exceptions as well
-  // TODO: what does happen to this object when exception is thrown?
+  try {
+    while (!Thread::interrupted()) {
+      // dummy loop, wait untill interrupt
+      Thread::sleep(1000);
+      Thread::yield();
+    }
+  } catch (ZThread::Synchronization_Exception& e) {
+    // thread was interupted, normal way to shutdown the thread
+    // this object will be destroyed
+    log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
+    return;
+  }
 }
 
 void

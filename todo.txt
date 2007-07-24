@@ -2,7 +2,6 @@ Todo
 ====
 
 *  work on logging messages...
-*  check what happens when the exception is thrown in the NodeThread, is the object still alive, or is it destroyed once it exits the run...
 *  peerNoteType is always one? 
 *  how should I read a file from TestDDAReply (binary mode or textual mode)
 *  delete created tmp file in TestDDA

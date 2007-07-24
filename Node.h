@@ -44,6 +44,7 @@ public:
   void shutdown() {
     log().log(DEBUG, "about to shutdown the node");
     executor.interrupt();
+    log().log(DEBUG, "node is shutdown");
   }
 
   bool isAlive() const {

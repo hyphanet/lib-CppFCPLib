@@ -456,6 +456,8 @@ Node::putData(const std::string URI, std::istream* s, int dataLength, const std:
   JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
   clientReqQueue->put(job);
 
+  job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
+
   return job;
 }
 
@@ -483,6 +485,8 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
+
+  job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
 
   return job;
 }
@@ -555,7 +559,26 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
 
-  return job;
+  job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
+
+  try
+  {
+    Response resp = job->getResponse();
+    checkProtocolError(resp); // throws
+    return job;
+  }
+  catch (FCPException &e)
+  {
+    // error, try direct mode
+
+    std::ifstream is(filename.c_str(), std::ios::binary);
+    // TODO: error checking
+    is.seekg(0, std::ios_base::end);
+    int pos = is.tellg();
+    is.seekg(0, std::ios_base::beg);
+
+    return putData(URI, &is, pos, id, fields);
+  }
 }
 
 void

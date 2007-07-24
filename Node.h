@@ -65,6 +65,7 @@ public:
   Message::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
   PeerNote modifyPeerNote(const std::string &, const std::string &, int);
   Message::Ptr removePeer(const std::string &);
+
   Message::Ptr getNode(const AdditionalFields& = AdditionalFields());
   Message::Ptr getConfig(const AdditionalFields& = AdditionalFields());
   Message::Ptr modifyConfig(Message::Ptr m);

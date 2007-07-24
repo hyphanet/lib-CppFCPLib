@@ -242,6 +242,7 @@ Node::getNode(const AdditionalFields& fields)
 {
   Message::Ptr m = Message::factory( std::string("GetNode") );
 
+  if (fields.hasField("GiveOpennetRef")) m->setField("GiveOpennetRef", fields.getField("GiveOpennetRef"));
   if (fields.hasField("WithPrivate")) m->setField("WithPrivate", fields.getField("WithPrivate"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
@@ -357,6 +358,7 @@ Node::testDDA(std::string dir, bool read, bool write)
 {
    TestDDAReplyResponse::Ptr replyResponse;
    Message::Ptr m;
+   boost::filesystem::path filePath;
 
    try
    {
@@ -371,6 +373,7 @@ Node::testDDA(std::string dir, bool read, bool write)
        }
      }
      if (write) {
+       filePath = boost::filesystem::path( replyResponse->getWriteFilename() );
        std::ofstream os(replyResponse->getWriteFilename().c_str());
        if (os) {
          os << replyResponse->getContent();;
@@ -378,29 +381,36 @@ Node::testDDA(std::string dir, bool read, bool write)
        }
      }
      TestDDAResponse ret = testDDAResponse(dir, readContent.str());
-     //TODO: delete created file
+     try {
+       if (write) boost::filesystem::remove( filePath );
+     } catch (boost::filesystem::basic_filesystem_error<boost::filesystem::path>& e) {
+       log().log(ERROR, e.what());
+     }
      return ret;
    }
    catch (FCPException& e)
    {
      log().log(ERROR, e.getMessage()->toString());
-     return TestDDAResponse(dir, false, false);
    }
    catch (std::logic_error& e)
    {
      log().log(FATAL, e.what()); // this should never happen... TODO: should I force shutdown?
-     return TestDDAResponse(dir, false, false);
    }
    catch (std::runtime_error& e)
    {
      log().log(ERROR, e.what());
-     return TestDDAResponse(dir, false, false);
    }
    catch (std::exception& e)
    {
      log().log(ERROR, e.what());
-     return TestDDAResponse(dir, false, false);
    }
+   // can happen if testDDAResponse throws
+   try {
+     if (write) boost::filesystem::remove( filePath );
+   } catch (boost::filesystem::basic_filesystem_error<boost::filesystem::path>& e) {
+     log().log(ERROR, e.what());
+   }
+   return TestDDAResponse(dir, false, false);
 }
 
 Message::Ptr

@@ -4,8 +4,10 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <boost/lexical_cast.hpp>
 
 #include "JobTicket.h"
+#include "Base64.h"
 
 namespace FCPLib {
 
@@ -50,6 +52,26 @@ public:
   bool readDirectory;
   bool writeDirectory;
 };
+
+class PeerNote {
+public:
+  PeerNote( Message::Ptr m )
+    : nodeIdentifier( m->getField("NodeIdentifier") ),
+      noteText( Base64::base64Decode( m->getField("NoteText") ) ),
+      peerNoteType( boost::lexical_cast<int>(m->getField("PeerNoteType")) )
+  {}
+  std::string nodeIdentifier;
+  std::string noteText;
+  int peerNoteType;
+
+  std::string toString() const {
+    return "NodeIdentifier="+nodeIdentifier+"\n"+
+           "NodeText="+noteText+"\n"+
+           "PeerNoteType="+boost::lexical_cast<std::string>(peerNoteType)+"\n";
+  }
+};
+
+typedef std::vector<PeerNote> PeerNoteContainer;
 
 ///////////
 
@@ -104,6 +126,28 @@ struct TestDDAReplyConverter {
     return TestDDAReplyResponse::Ptr( new TestDDAReplyResponse(resp.front()->getMessage()) );
   }
 };
+
+struct PeerNotesConverter {
+  PeerNoteContainer
+  operator()( Response &resp )
+  {
+    PeerNoteContainer ret;
+    int size = resp.size() - 1;
+    Response::iterator end = resp.begin() + size;
+    for (Response::iterator it = resp.begin(); it != end; ++it)
+      ret.push_back( PeerNote( (*it)->getMessage() ) );
+    return ret;
+  }
+};
+
+struct PeerNoteConverter {
+  PeerNote
+  operator()( Response &resp )
+  {
+    return PeerNote( resp.front()->getMessage() );
+  }
+};
+
 
 //////////
 

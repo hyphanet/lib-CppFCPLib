@@ -110,7 +110,7 @@ Node::listPeers(const AdditionalFields& fields)
   return createResult<MessagePtrContainer, VectorWithoutLastConverter>( resp );
 }
 
-MessagePtrContainer
+PeerNoteContainer
 Node::listPeerNotes(const std::string& identifier)
 {
   Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
@@ -126,7 +126,7 @@ Node::listPeerNotes(const std::string& identifier)
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return createResult<MessagePtrContainer, VectorWithoutLastConverter>( resp );
+  return createResult<PeerNoteContainer, PeerNotesConverter>( resp );
 }
 
 Message::Ptr
@@ -193,7 +193,7 @@ Node::modifyPeer(const std::string & nodeIdentifier,
   return createResult<Message::Ptr, MessageConverter>( resp );
 }
 
-Message::Ptr
+PeerNote
 Node::modifyPeerNote(const std::string & nodeIdentifier,
                      const std::string & noteText,
                      int peerNoteType = 1)
@@ -201,7 +201,7 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
   Message::Ptr m = Message::factory( std::string("ModifyPeerNote") );
 
   m->setField("NodeIdentifier", nodeIdentifier);
-  m->setField("NoteText", noteText);
+  m->setField("NoteText", Base64::base64Encode((const unsigned char*)noteText.c_str(), noteText.size()));
   m->setField("PeerNoteType", "1");  // TODO: change to peerNoteType once it is used
 
   JobTicket::Ptr job = JobTicket::factory( "", m, false);
@@ -214,7 +214,7 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
   // ProtocolError or UnknownNodeIdentifier
   checkProtocolError(resp); // throws
 
-  return createResult<Message::Ptr, MessageConverter>( resp );
+  return createResult<PeerNote, PeerNoteConverter>( resp );
 }
 
 Message::Ptr

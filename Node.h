@@ -59,11 +59,11 @@ public:
 
   Message::Ptr listPeer(const std::string &);
   MessagePtrContainer listPeers(const AdditionalFields& = AdditionalFields());
-  MessagePtrContainer listPeerNotes(const std::string&);
+  PeerNoteContainer listPeerNotes(const std::string&);
   Message::Ptr addPeer(const std::string &, bool isURL);
   Message::Ptr addPeer(const std::map<std::string, std::string> &message);
   Message::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
-  Message::Ptr modifyPeerNote(const std::string &, const std::string &, int);
+  PeerNote modifyPeerNote(const std::string &, const std::string &, int);
   Message::Ptr removePeer(const std::string &);
   Message::Ptr getNode(const AdditionalFields& = AdditionalFields());
   Message::Ptr getConfig(const AdditionalFields& = AdditionalFields());

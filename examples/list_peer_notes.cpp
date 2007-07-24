@@ -11,12 +11,12 @@ int main( int argc, char* argv[]) {
 
   Node n("List Peer Notes Test", "", -1);
 
-  MessagePtrContainer peer_notes = n.listPeerNotes(argv[1]);
+  PeerNoteContainer peer_notes = n.listPeerNotes(argv[1]);
   
-  for (MessagePtrContainer::iterator it = peer_notes.begin();
+  for (PeerNoteContainer::iterator it = peer_notes.begin();
        it != peer_notes.end();
        ++it) {
-    std::cout << (*it)->toString() << std::endl;
+    std::cout << it->toString() << std::endl;
     std::cout << std::endl;
   }
   n.shutdown();

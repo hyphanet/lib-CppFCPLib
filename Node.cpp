@@ -693,6 +693,49 @@ Node::listPersistentJobs()
 }
 
 void
+Node::removePersistentRequest( JobTicket::Ptr job )
+{
+  if ( !job->isPersistent() )
+    throw std::invalid_argument("Job is not persistent");
+
+  Message::Ptr m = Message::factory( std::string("PersistentRequestRemoved ") );
+  m->setField( "Global", Converter::toString( job->isGlobal() ) );
+  m->setField( "Identifier", job->getId() );
+
+  JobTicket::Ptr job_ = JobTicket::factory( "", m );
+  clientReqQueue->put(job_);
+
+  // wait on job that is to be cancelled
+  job->wait(globalCommandsTimeout);
+}
+
+void
+Node::modifyPersistentRequest( JobTicket::Ptr job, const AdditionalFields& fields )
+{
+  if ( !job->isPersistent() )
+    throw std::invalid_argument("Job is not persistent");
+
+  bool changed = false;
+
+  Message::Ptr m = Message::factory( std::string("ModifyPersistentRequest ") );
+  m->setField( "Identifier", job->getId() );
+  m->setField( "Global", Converter::toString( job->isGlobal() ) );
+  if (fields.hasField("PriorityClass")) {
+    m->setField("PriorityClass", fields.getField("PriorityClass"));
+    changed = true;
+  }
+  if (fields.hasField("ClientToken")) {
+    m->setField("ClientToken", fields.getField("ClientToken"));
+    changed = true;
+  }
+  if (!changed)
+    throw std::invalid_argument("Either ClientToken or PriorityClass needs to be defined.");
+
+  JobTicket::Ptr job_ = JobTicket::factory( "", m );
+  clientReqQueue->put(job_);
+}
+
+void
 Node::shutdown()
 {
   log().log(DEBUG, "about to shutdown the node");

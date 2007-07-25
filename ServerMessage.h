@@ -52,6 +52,15 @@ struct IsLastPeerNote {
   bool operator()(const JobTicketPtr job) const;
 };
 
+struct IsLastPutFailed {
+  bool operator()(const JobTicketPtr job) const;
+};
+
+struct IsLastGetFailed {
+  bool operator()(const JobTicketPtr job) const;
+};
+
+
 template<typename isLastT = IsLastTrue, bool isErrorT = false>
 class ServerMessageT : public ServerMessage {
   ServerMessageT() {}
@@ -94,10 +103,11 @@ typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
 typedef class ServerMessageT<IsLastFalse, false> SimpleProgressMessage;
 
 typedef class ServerMessageT<IsLastFalse, false> FinishedCompressionMessage;
-typedef class ServerMessageT<IsLastFalse, false> PersistentRequestRemovedMessage; // ????
+typedef class ServerMessageT<IsLastTrue, false> PersistentRequestRemovedMessage;
+typedef class ServerMessageT<IsLastTrue, false> PersistentRequestModifiedMessage;
 
-typedef class ServerMessageT<IsLastTrue, true> PutFailedMessage;
-typedef class ServerMessageT<IsLastTrue, true> GetFailedMessage;
+typedef class ServerMessageT<IsLastPutFailed, true> PutFailedMessage;
+typedef class ServerMessageT<IsLastGetFailed, true> GetFailedMessage;
 typedef class ServerMessageT<IsLastTrue, true> ProtocolErrorMessage;
 typedef class ServerMessageT<IsLastTrue, true> IdentifierCollisionMessage;
 typedef class ServerMessageT<IsLastTrue, true> UnknownNodeIdentifierMessage;

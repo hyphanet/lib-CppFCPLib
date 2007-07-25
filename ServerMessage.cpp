@@ -89,7 +89,7 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
     m = Ptr( new PersistentRequestRemovedMessage() );
   } else
   if (header == "PersistentRequestModified") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new PersistentRequestModifiedMessage() );
   } else
   if (header == "PutFailed") {
     m = Ptr( new PutFailedMessage() );
@@ -171,3 +171,24 @@ IsLastPeerNote::operator()(const JobTicket::Ptr job) const
 
     throw NotImplemented("Unknown command");
 }
+
+
+bool
+IsLastPutFailed::operator()(const JobTicketPtr job) const
+{
+  if ( boost::lexical_cast<int>( message->getField("Code") ) == 10 )
+    return false;
+  return true;
+}
+
+bool
+IsLastGetFailed::operator()(const JobTicketPtr job) const
+{
+  if ( boost::lexical_cast<int>( message->getField("Code") ) == 25 )
+    return false;
+  return true;
+}
+
+struct IsLastGetFailed {
+  bool operator()(const JobTicketPtr job) const;
+};

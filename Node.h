@@ -94,6 +94,8 @@ public:
   void refreshPersistentRequest();
   JobCollection listGlobalJobs();
   JobCollection listPersistentJobs();
+  void removePersistentRequest( JobTicket::Ptr job );
+  void modifyPersistentRequest( JobTicket::Ptr job, const AdditionalFields& );
 };
 }
 

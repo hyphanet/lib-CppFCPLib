@@ -92,6 +92,8 @@ public:
 
   void watchGlobal( bool enabled, int verbosity );
   void refreshPersistentRequest();
+  JobCollection listGlobalJobs();
+  JobCollection listPersistentJobs();
 };
 }
 

@@ -32,6 +32,7 @@ private:
 
   bool keep;
   bool global;
+  bool persistent;
 
   std::string repr;
   bool isReprValid;
@@ -57,11 +58,18 @@ private:
     nodeResponse.push_back(m);
   }
 
-  JobTicket() : keep(false), global(false), isReprValid(false), _isFinished(false) {}
+  JobTicket()
+    : keep(false),
+      global(false),
+      persistent(false),
+      isReprValid(false),
+      _isFinished(false)
+  {}
   static Ptr factory(std::string id, Message::Ptr cmd);
 
   JobTicket& setKeep( bool x ) { keep = x; return *this; };
   JobTicket& setGlobal( bool x ) { global = x; return *this; };
+  JobTicket& setPersistent( bool x ) { persistent = x; return *this; };
   void setCallback( boost::function<void (int, const ServerMessage::Ptr)> f )
   {
     this->f = f;
@@ -86,6 +94,7 @@ public:
   const std::string& toString();
 
   bool isGlobal() const { return global; }
+  bool isPersistent() const { return persistent; }
 
   bool isFinished()
   {
@@ -96,6 +105,8 @@ public:
   friend class Node;
   friend class NodeThread;
 };
+
+typedef std::vector<JobTicket::Ptr> JobCollection;
 
 }
 

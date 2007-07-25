@@ -450,18 +450,29 @@ Node::putData(const std::string URI, std::istream* s, int dataLength, const std:
   if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
   if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
   if (fields.hasField("GetCHKOnly")) m->setField("GetCHKOnly", fields.getField("GetCHKOnly"));
-  if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  if (fields.hasField("Global"))
+    m->setField("Global", fields.getField("Global"));
+  else
+    m->setField("Global", "false");
   if (fields.hasField("DontCompress")) m->setField("DontCompress", fields.getField("DontCompress"));
   if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
-  if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
+  if (fields.hasField("Persistence"))
+    m->setField("Persistence", fields.getField("Persistence"));
+  else
+    m->setField("Persistence", "connection");
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
   if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   m->setField("UploadFrom", "direct");
-
   m->setStream(s, dataLength);
 
+  bool persistent = m->getField("Persistence") != "connection";
+  bool global = boost::lexical_cast<bool>( m->getField("Global") );
+  if (global && !persistent)
+    throw std::invalid_argument("Global requests must be persistent");
+
   JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+  job->setGlobal( global ).setPersistent( persistent );
   clientReqQueue->put(job);
 
   job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
@@ -481,18 +492,29 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
   if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
   // does not use chkonly
-  if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  if (fields.hasField("Global"))
+    m->setField("Global", fields.getField("Global"));
+  else
+    m->setField("Global", "false");
   // does not use dontcompress
   if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
-  if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
+  if (fields.hasField("Persistence"))
+    m->setField("Persistence", fields.getField("Persistence"));
+  else
+    m->setField("Persistence", "connection");
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
   if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   m->setField("UploadFrom", "redirect");
   m->setField("TargetURI", target);
 
+  bool persistent = m->getField("Persistence") != "connection";
+  bool global = boost::lexical_cast<bool>( m->getField("Global") );
+  if (global && !persistent)
+    throw std::invalid_argument("Global requests must be persistent");
+
   JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
-  log().log(DEBUG, job->toString());
+  job->setGlobal( global ).setPersistent( persistent );
   clientReqQueue->put(job);
 
   job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
@@ -555,10 +577,16 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
   if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
   if (fields.hasField("GetCHKOnly")) m->setField("GetCHKOnly", fields.getField("GetCHKOnly"));
-  if (fields.hasField("Global")) m->setField("Global", fields.getField("Global"));
+  if (fields.hasField("Global"))
+    m->setField("Global", fields.getField("Global"));
+  else
+    m->setField("Global", "false");
   if (fields.hasField("DontCompress")) m->setField("DontCompress", fields.getField("DontCompress"));
   if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
-  if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
+  if (fields.hasField("Persistence"))
+    m->setField("Persistence", fields.getField("Persistence"));
+  else
+    m->setField("Persistence", "connection");
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
   if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
@@ -567,8 +595,13 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   if (!r.readDirectory)
     m->setField("FileHash", fields.getField("FileHash"));
 
+  bool persistent = m->getField("Persistence") != "connection";
+  bool global = boost::lexical_cast<bool>( m->getField("Global") );
+  if (global && !persistent)
+    throw std::invalid_argument("Global requests must be persistent");
+
   JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
-  log().log(DEBUG, job->toString());
+  job->setGlobal( global ).setPersistent( persistent );
   clientReqQueue->put(job);
 
   job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
@@ -632,6 +665,31 @@ Node::refreshPersistentRequest()
 
   log().log(DEBUG, "waiting for EndListPersistentRequests message");
   job->wait(globalCommandsTimeout);
+}
+
+JobCollection
+Node::listGlobalJobs()
+{
+  JobCollection ret;
+  std::map<std::string, JobTicket::Ptr >::iterator it;
+
+  for (it = nodeThread->jobs[1].begin(); it != nodeThread->jobs[1].end(); ++it)
+    ret.push_back(it->second);
+
+  return ret;
+}
+
+JobCollection
+Node::listPersistentJobs()
+{
+  JobCollection ret;
+  std::map<std::string, JobTicket::Ptr >::iterator it;
+
+  for (int i = 0; i < 2; ++i)
+    for (it = nodeThread->jobs[i].begin(); it != nodeThread->jobs[i].end(); ++it)
+      if (it->second->isPersistent()) ret.push_back(it->second);
+
+  return ret;
 }
 
 void

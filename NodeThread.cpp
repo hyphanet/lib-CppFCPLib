@@ -123,6 +123,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
         return;
       }
       JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+      job->setGlobal(true).setPersistent(true);
       jobs[1][m->getField("Identifier")] = job;
       return;
     }

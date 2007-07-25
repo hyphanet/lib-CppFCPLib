@@ -3,6 +3,8 @@
 #include "ServerMessage.h"
 #include "JobTicket.h"
 
+#include <boost/lexical_cast.hpp>
+
 using namespace FCPLib;
 
 ServerMessage::Ptr
@@ -65,7 +67,7 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
     m = Ptr( new PutSuccessfulMessage() );
   } else
   if (header == "PutFetchable") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new PutFetchableMessage() );
   } else
   if (header == "DataFound") {
     throw new std::runtime_error("Not implemented " + header);

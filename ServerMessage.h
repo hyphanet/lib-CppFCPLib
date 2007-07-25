@@ -37,6 +37,8 @@ typedef std::vector<ServerMessage::Ptr> Response;
 
 template<bool isLast>
 struct IsLastT {
+  Message::Ptr message;
+  IsLastT( Message::Ptr m ) : message(m) {}
   bool operator()(const JobTicketPtr job) const {
     return isLast;
   }
@@ -45,18 +47,26 @@ typedef IsLastT<true> IsLastTrue;
 typedef IsLastT<false> IsLastFalse;
 
 struct IsLastPeer {
+  Message::Ptr message;
+  IsLastPeer( Message::Ptr m ) : message(m) {}
   bool operator()(const JobTicketPtr job) const;
 };
 
 struct IsLastPeerNote {
+  Message::Ptr message;
+  IsLastPeerNote( Message::Ptr m ) : message(m) {}
   bool operator()(const JobTicketPtr job) const;
 };
 
 struct IsLastPutFailed {
+  Message::Ptr message;
+  IsLastPutFailed( Message::Ptr m ) : message(m) {}
   bool operator()(const JobTicketPtr job) const;
 };
 
 struct IsLastGetFailed {
+  Message::Ptr message;
+  IsLastGetFailed( Message::Ptr m ) : message(m) {}
   bool operator()(const JobTicketPtr job) const;
 };
 
@@ -70,7 +80,7 @@ public:
     return  id.size() ? id : "";
   }
   bool isLast(const JobTicketPtr job) const {
-    return isLastT()( job );
+    return isLastT( message )( job );
   }
   bool isError() const {
     return isErrorT;
@@ -99,10 +109,11 @@ typedef class ServerMessageT<IsLastFalse, false> PersistentPutDirMessage;
 
 typedef class ServerMessageT<IsLastFalse, false> URIGeneratedMessage;
 typedef class ServerMessageT<IsLastTrue, false> PutSuccessfulMessage;
-typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
-typedef class ServerMessageT<IsLastFalse, false> SimpleProgressMessage;
+typedef class ServerMessageT<IsLastFalse, false> PutFetchableMessage;
 
+typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
 typedef class ServerMessageT<IsLastFalse, false> FinishedCompressionMessage;
+typedef class ServerMessageT<IsLastFalse, false> SimpleProgressMessage;
 typedef class ServerMessageT<IsLastTrue, false> PersistentRequestRemovedMessage;
 typedef class ServerMessageT<IsLastTrue, false> PersistentRequestModifiedMessage;
 

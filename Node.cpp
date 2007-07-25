@@ -59,7 +59,7 @@ Node::Node(std::string name_, std::string host, int port)
   m->setField("Name", name);
   m->setField("ExpectedVersion", "2.0");
 
-  JobTicket::Ptr job = JobTicket::factory("", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "Node constructor: waiting for response to ClientHello");
@@ -84,7 +84,7 @@ Node::listPeer(const std::string & identifier)
 
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -104,7 +104,7 @@ Node::listPeers(const AdditionalFields& fields)
   if (fields.hasField("WithMetadata")) m->setField("WithMetadata", fields.getField("WithMetadata"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for EndListPeers message");
@@ -123,7 +123,7 @@ Node::listPeerNotes(const std::string& identifier)
   Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for EndListPeerNotes message");
@@ -144,7 +144,7 @@ Node::addPeer(const std::string &value, bool isURL = false) {
   else
     m->setField("URL", value);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -164,7 +164,7 @@ Node::addPeer(const std::map<std::string, std::string> &message)
 
   m->setFields(message);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -188,7 +188,7 @@ Node::modifyPeer(const std::string & nodeIdentifier,
   if (fields.hasField("IsDisabled")) m->setField("IsDisabled", fields.getField("IsDisabled"));
   if (fields.hasField("IsListenOnly")) m->setField("IsListenOnly", fields.getField("IsListenOnly"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -203,15 +203,15 @@ Node::modifyPeer(const std::string & nodeIdentifier,
 PeerNote
 Node::modifyPeerNote(const std::string & nodeIdentifier,
                      const std::string & noteText,
-                     int peerNoteType = 1)
+                     int peerNoteType)
 {
   Message::Ptr m = Message::factory( std::string("ModifyPeerNote") );
 
   m->setField("NodeIdentifier", nodeIdentifier);
   m->setField("NoteText", Base64::base64Encode((const unsigned char*)noteText.c_str(), noteText.size()));
-  m->setField("PeerNoteType", "1");  // TODO: change to peerNoteType once it is used
+  m->setField("PeerNoteType", peerNoteType);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for PeerNote message");
@@ -231,7 +231,7 @@ Node::removePeer(const std::string &identifier)
 
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for PeerRemoved message");
@@ -253,7 +253,7 @@ Node::getNode(const AdditionalFields& fields)
   if (fields.hasField("WithPrivate")) m->setField("WithPrivate", fields.getField("WithPrivate"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for NodeData message");
@@ -279,7 +279,7 @@ Node::getConfig(const AdditionalFields& fields)
   if (fields.hasField("WithShortDescription")) m->setField("WithShortDescription", fields.getField("WithShortDescription"));
   if (fields.hasField("WithLongDescription")) m->setField("WithLongDescription", fields.getField("WithLongDescription"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for ConfigData message");
@@ -298,7 +298,7 @@ Node::modifyConfig(Message::Ptr m)
   if (m->getHeader() != "ModifyConfig")
     throw std::logic_error("ModifyConfig message expected, " + m->getHeader() + " received");
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for ConfigData message");
@@ -322,7 +322,7 @@ Node::testDDARequest(std::string dir, bool read, bool write)
   if (write)
     m->setField("WantWriteDirectory", "true");
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for TestDDAReply");
@@ -344,7 +344,7 @@ Node::testDDAResponse(std::string dir, std::string readContent)
   if (readContent != "")
     m->setField("ReadContent", readContent);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for TestDDAComplete");
@@ -426,7 +426,7 @@ Node::generateSSK(std::string identifier)
   Message::Ptr m = Message::factory( std::string("GenerateSSK") );
   m->setField("Identifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( identifier, m, false);
+  JobTicket::Ptr job = JobTicket::factory( identifier, m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for SSKKeypair message");
@@ -461,7 +461,7 @@ Node::putData(const std::string URI, std::istream* s, int dataLength, const std:
 
   m->setStream(s, dataLength);
 
-  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
+  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
   clientReqQueue->put(job);
 
   job->waitTillReqSent(globalCommandsTimeout); // assure that there is a response
@@ -491,7 +491,7 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   m->setField("UploadFrom", "redirect");
   m->setField("TargetURI", target);
 
-  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
+  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
 
@@ -567,7 +567,7 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   if (!r.readDirectory)
     m->setField("FileHash", fields.getField("FileHash"));
 
-  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m, false);
+  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
   log().log(DEBUG, job->toString());
   clientReqQueue->put(job);
 
@@ -604,7 +604,7 @@ Node::subscribeUSK(const std::string USK, const std::string id, bool dontPoll)
   m->setField("Identifier", id);
   m->setField("DontPoll", Converter::toString( dontPoll ));
 
-  JobTicket::Ptr job = JobTicket::factory( id, m, false );
+  JobTicket::Ptr job = JobTicket::factory( id, m );
   clientReqQueue->put(job);
 
   return job;
@@ -617,23 +617,19 @@ Node::watchGlobal( bool enabled, int verbosity )
   m->setField( "Enabled", Converter::toString( enabled ) );
   m->setField( "VerbosityMask", boost::lexical_cast<std::string>(verbosity) );
 
-  JobTicket::Ptr job = JobTicket::factory( "", m, false );
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 }
 
-MessagePtrContainer
-Node::listPersistentRequest()
+void
+Node::refreshPersistentRequest()
 {
   Message::Ptr m = Message::factory( std::string("ListPersistentRequest") );
-  JobTicket::Ptr job = JobTicket::factory( "", m, false);
+  JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
 
-  log().log(DEBUG, "waiting for SSKKeypair message");
+  // persistent jobs will be updated
+
+  log().log(DEBUG, "waiting for EndListPersistentRequests message");
   job->wait(globalCommandsTimeout);
-
-  Response resp = job->getResponse();
-  checkProtocolError(resp); // throws
-
-  // hmmm... this does not work probably as messages will contain Identifiers and will be assigned to other jobs...
-  return createResult<MessagePtrContainer, VectorWithoutLastConverter>( resp );
 }

@@ -63,7 +63,7 @@ public:
   Message::Ptr addPeer(const std::string &, bool isURL);
   Message::Ptr addPeer(const std::map<std::string, std::string> &message);
   Message::Ptr modifyPeer(const std::string &, const AdditionalFields& = AdditionalFields());
-  PeerNote modifyPeerNote(const std::string &, const std::string &, int);
+  PeerNote modifyPeerNote(const std::string &, const std::string &, int = 1);
   Message::Ptr removePeer(const std::string &);
 
   Message::Ptr getNode(const AdditionalFields& = AdditionalFields());
@@ -95,7 +95,7 @@ public:
   JobTicket::Ptr subscribeUSK(const std::string, const std::string, bool);
 
   void watchGlobal( bool enabled, int verbosity );
-  MessagePtrContainer listPersistentRequest();
+  void refreshPersistentRequest();
 };
 }
 

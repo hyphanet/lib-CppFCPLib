@@ -19,14 +19,19 @@
 namespace FCPLib {
 
 class NodeThread;
+class Node;
 
 class JobTicket {
+public:
+  typedef boost::shared_ptr<JobTicket > Ptr;
+private:
   std::string id;
   Message::Ptr cmd;
 
   Response nodeResponse;
 
   bool keep;
+  bool global;
 
   std::string repr;
   bool isReprValid;
@@ -52,22 +57,20 @@ class JobTicket {
     nodeResponse.push_back(m);
   }
 
-  JobTicket() : isReprValid(false), _isFinished(false) {}
-public:
-  typedef boost::shared_ptr<JobTicket > Ptr;
+  JobTicket() : keep(false), global(false), isReprValid(false), _isFinished(false) {}
+  static Ptr factory(std::string id, Message::Ptr cmd);
 
-  static Ptr factory(std::string id, Message::Ptr cmd, bool keep);
-
+  JobTicket& setKeep( bool x ) { keep = x; return *this; };
+  JobTicket& setGlobal( bool x ) { global = x; return *this; };
   void setCallback( boost::function<void (int, const ServerMessage::Ptr)> f )
   {
     this->f = f;
   }
-
   void setCallback( void (*f)(int, const ServerMessage::Ptr) )
   {
     this->f = f;
   }
-
+public:
   const std::string& getCommandName() const;
   const std::string& getId() const;
   const Message::Ptr getCommand() const;
@@ -82,12 +85,15 @@ public:
   }
   const std::string& toString();
 
+  bool isGlobal() const { return global; }
+
   bool isFinished()
   {
     ZThread::Guard<ZThread::Mutex> g(access);
     return _isFinished;
   }
 
+  friend class Node;
   friend class NodeThread;
 };
 

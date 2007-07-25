@@ -30,7 +30,7 @@ class NodeThread : public ZThread::Runnable {
   bool isAlive_;
   ZThread::CountedPtr<std::exception> exception;
 
-  std::map<std::string, JobTicket::Ptr > jobs;
+  std::map<std::string, JobTicket::Ptr > jobs[2]; // 0 -- local jobs, 1 -- global jobs
 
   friend class Node;
   NodeThread(std::string &host, int port, JobTicketQueuePtr clientReqQueue_) throw();

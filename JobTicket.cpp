@@ -9,15 +9,13 @@
 using namespace FCPLib;
 
 JobTicket::Ptr
-JobTicket::factory(std::string id, Message::Ptr cmd, bool keep)
+JobTicket::factory(std::string id, Message::Ptr cmd)
 {
    log().log(NOISY, "Creating " + cmd->getHeader());
    Ptr ret( new JobTicket() );
 
    ret->id = id;
    ret->cmd = cmd;
-
-   ret->keep = keep;
 
    ret->lock.acquire();
    ret->reqSentLock.acquire();

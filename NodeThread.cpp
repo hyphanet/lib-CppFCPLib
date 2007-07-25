@@ -1,8 +1,11 @@
 
 
+#include <ctime>
+#include <boost/lexical_cast.hpp>
+
 #include "NodeThread.h"
 #include "Log.h"
-#include <ctime>
+
 
 using namespace FCPLib;
 using namespace ZThread;
@@ -85,7 +88,7 @@ NodeThread::sendClientReq(JobTicket::Ptr job)
   log().log(NOISY, "sendClientReq : top");
   if (job->getCommandName() != "WatchGlobal") {
     log().log(NOISY, "sendClientReq : about to add the job to the map");
-    jobs[job->getId()] = job;
+    jobs[job->isGlobal() ? 1 : 0][job->getId()] = job;
     log().log(NOISY, "sendClientReq : added the job to the map");
   }
 
@@ -99,19 +102,28 @@ NodeThread::doMessage(ServerMessage::Ptr message)
   JobTicket::Ptr job;
   std::map<std::string, JobTicket::Ptr>::iterator it;
 
-  it = jobs.find(message->getIdOfJob());
-  if (it == jobs.end()) {
+  std::string tmp = message->getMessage()->getField("Global");
+  tmp = tmp == "" ? "false" : tmp;
+  int isGlobal = boost::lexical_cast<int>(tmp);
+
+  it = jobs[isGlobal].find(message->getIdOfJob());
+  if (it == jobs[isGlobal].end()) {
     log().log(DETAIL, "doMessage : received " + message->getMessage()->getHeader() + ", cannot find " + message->getIdOfJob() + " in started jobs");
     /// message from global queue or error
     Message::Ptr m = message->getMessage();
-    if ( m->getField("Identifier") == "" ) { // error
+    if (!isGlobal) { // error
       log().log(DEBUG, "doMessage : received error message");
       // TODO: create a mean of passing error messages to client programme
       return;
     } else { // global queue, create a job
       log().log(DEBUG, "doMessage : received message from a global queue");
-      JobTicket::Ptr job = JobTicket::factory(m->getField("Identifier"), m, false);
-      jobs[m->getField("Identifier")] = job;
+      if ( m->getField("Identifier") == "" ) {
+        // should never happen
+        log().log(ERROR, "doMessage : global message does not contain identifier !???");
+        return;
+      }
+      JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+      jobs[1][m->getField("Identifier")] = job;
       return;
     }
   }
@@ -125,7 +137,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
 
     if (!job->keep) {
       log().log(NOISY, "doMessage : job should not be kept, erasing");
-      jobs.erase( it );
+      jobs[isGlobal].erase( it );
     }
   }
   else {

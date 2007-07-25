@@ -1,7 +1,10 @@
-#include "Message.h"
+
 #include <boost/lexical_cast.hpp>
 #include <iterator>
 #include <algorithm>
+
+#include "Message.h"
+#include "Exceptions.h"
 
 using namespace FCPLib;
 
@@ -45,7 +48,7 @@ Message::getField(std::string key) const
 void
 Message::setStream(std::istream* s_, int dataLength)
 {
-  throw std::runtime_error("Message::setStream not implemented");
+  throw NotImplemented("Message::setStream is not implemented.");
 }
 
 const std::string&

@@ -18,6 +18,26 @@ public:
   ~FCPException() throw();
 };
 
+class FileError : public std::runtime_error {
+  std::string path_;
+public:
+  FileError( std::string msg, std::string path )
+    : std::runtime_error(msg),
+      path_(path) {}
+  const std::string& getFile() const { return path_; }
+  ~FileError() throw() {}
+};
+
+class NotImplemented : public std::logic_error {
+public:
+  NotImplemented(std::string msg) : std::logic_error(msg) {}
+};
+
+class CommandTimeout : public std::runtime_error {
+public:
+  CommandTimeout(std::string msg) : std::runtime_error(msg) {}
+};
+
 }
 
 #endif

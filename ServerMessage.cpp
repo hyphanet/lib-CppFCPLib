@@ -108,7 +108,10 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
   if (header == "UnknownPeerNoteType") {
     m = Ptr( new UnknownPeerNoteTypeMessage() );
   } else
-    throw new std::runtime_error("Not implemented " + header);
+  if (header == "SubscribedUSKUpdate") {
+    m = Ptr( new SubscribedUSKUpdate() );
+  } else
+    throw NotImplemented("Message " + header + " not implemented");
 
   m->message = Message::factory(header);
 

@@ -37,12 +37,6 @@ JobTicket::getCommandName() const
   return cmd->getHeader();
 }
 
-const std::string&
-JobTicket::getMessageText() const
-{
-  return cmd->toString();
-}
-
 void
 JobTicket::wait(unsigned int timeout)
 {
@@ -65,9 +59,7 @@ JobTicket::wait(unsigned int timeout)
     }
     log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": timeout on send command");
 
-    // TODO: should I maybe create a result here, and then when retrieving
-    // result throw an exception??
-    throw std::runtime_error("command timeout");
+    throw CommandTimeout("Timeout sending " + this->getCommandName());
   }
   log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": job now dispatched");
   while (!lock.tryAcquire(100)){
@@ -80,7 +72,7 @@ JobTicket::wait(unsigned int timeout)
     }
     log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": timeout on node response");
 
-    throw std::runtime_error("command timeout");
+    throw CommandTimeout("Timeout sending " + this->getCommandName());
   }
   log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": job complete");
   lock.release();
@@ -100,10 +92,7 @@ JobTicket::waitTillReqSent(unsigned int timeout)
       continue;
     }
     log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": timeout on send command");
-
-    // TODO: should I maybe create a result here, and then when retrieving
-    // result throw an exception??
-    throw std::runtime_error("command timeout");
+    throw CommandTimeout("Timeout sending " + this->getCommandName());
   }
 }
 
@@ -119,9 +108,6 @@ JobTicket::toString()
   repr += "Job id=" + id + " " +
              " keepJob=" + Converter::toString( keep ) + "\n";
   repr += "Message=" + cmd->getHeader();
-
-  // TODO:
-  // add representation of hasResult and Result
 
   return repr;
 }

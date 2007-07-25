@@ -449,6 +449,7 @@ Node::putData(const std::string URI, std::istream* s, int dataLength, const std:
   if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   m->setField("UploadFrom", "direct");
 
   m->setStream(s, dataLength);
@@ -479,6 +480,7 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   m->setField("UploadFrom", "redirect");
   m->setField("TargetURI", target);
 
@@ -510,7 +512,7 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
     std::ifstream is(filename.c_str(), std::ios::binary);
     if (!is.is_open()) {
       log().log(ERROR, "Error while opening file :: " + filename);
-      throw std::runtime_error("Error while opening file.");
+      throw FileError("Error while opening file.", filename);
     }
     unsigned char buf[1024];
 
@@ -525,8 +527,10 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
     while (true) {
       int bytes_read;
       is.read((char*)buf, 1024);
-      if (is.fail())
-        throw std::runtime_error("Error while reading file.");
+      if (is.fail()) {
+        log().log(ERROR, "Error while reading file :: " + filename);
+        throw FileError("Error while reading file.", filename);
+      }
       bytes_read = is.gcount();
       if (!bytes_read) break;
       sha.write(buf, bytes_read);
@@ -550,6 +554,7 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   if (fields.hasField("Persistence")) m->setField("Persistence", fields.getField("Persistence"));
   if (fields.hasField("TargetFilename")) m->setField("TargetFilename", fields.getField("TargetFilename"));
   if (fields.hasField("EarlyEncode")) m->setField("EarlyEncode", fields.getField("EarlyEncode"));
+  if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   m->setField("UploadFrom", "disk");
   m->setField("Filename", filename);
   if (!r.readDirectory)
@@ -572,13 +577,30 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
     // error, try direct mode
 
     std::ifstream is(filename.c_str(), std::ios::binary);
-    // TODO: error checking
+    if (!is.is_open()) {
+      log().log(ERROR, "Error while opening file :: " + filename);
+      throw FileError("Error while opening file.", filename);
+    }
     is.seekg(0, std::ios_base::end);
     int pos = is.tellg();
     is.seekg(0, std::ios_base::beg);
 
     return putData(URI, &is, pos, id, fields);
   }
+}
+
+JobTicket::Ptr
+Node::subscribeUSK(const std::string USK, const std::string id, bool dontPoll)
+{
+  Message::Ptr m = Message::factory( std::string("SubscribeUSK") );
+  m->setField("USK", USK);
+  m->setField("Identifier", id);
+  m->setField("DontPoll", Converter::toString( dontPoll ));
+
+  JobTicket::Ptr job = JobTicket::factory( id, m, false );
+  clientReqQueue->put(job);
+
+  return job;
 }
 
 void

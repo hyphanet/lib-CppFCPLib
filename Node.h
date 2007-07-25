@@ -92,6 +92,8 @@ public:
                          const AdditionalFields& = AdditionalFields()
                          );
 
+  JobTicket::Ptr subscribeUSK(const std::string, const std::string, bool);
+
   void watchGlobal( bool enabled, int verbosity );
   MessagePtrContainer listPersistentRequest();
 };

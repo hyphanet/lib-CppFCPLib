@@ -3,7 +3,7 @@
 
 #include "Message.h"
 #include "Server.h"
-#include <exception>
+#include "Exceptions.h"
 #include <string>
 
 namespace FCPLib {
@@ -116,7 +116,7 @@ typedef class ServerMessageT<IsLastTrue, true> IdentifierCollisionMessage;
 typedef class ServerMessageT<IsLastTrue, true> UnknownNodeIdentifierMessage;
 typedef class ServerMessageT<IsLastTrue, true> UnknownPeerNoteTypeMessage;
 
-
+typedef class ServerMessageT<IsLastFalse, false> SubscribedUSKUpdate;
 
 }
 

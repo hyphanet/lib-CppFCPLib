@@ -3,8 +3,8 @@
 
 #include "Message.h"
 #include "ServerMessage.h"
+#include "Exceptions.h"
 
-#include <stdexcept>
 #include <vector>
 #include <iostream>
 
@@ -70,7 +70,6 @@ public:
 
   const std::string& getCommandName() const;
   const std::string& getId() const;
-  const std::string& getMessageText() const;
   const Message::Ptr getCommand() const;
 
   void wait(unsigned int timeout_=0);

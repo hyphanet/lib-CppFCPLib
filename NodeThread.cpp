@@ -90,7 +90,7 @@ NodeThread::sendClientReq(JobTicket::Ptr job)
     log().log(NOISY, "sendClientReq : added the job to the map");
   }
 
-  s->send(job->getMessageText());
+  s->send(job->getCommand());
   job->timeQueued = (unsigned int) time(0);
 }
 

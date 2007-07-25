@@ -1,12 +1,17 @@
 #ifndef SERVERMESSAGE_H__
 #define SERVERMESSAGE_H__
 
+#include <string>
+#include <boost/shared_ptr.hpp>
+
 #include "Message.h"
 #include "Server.h"
 #include "Exceptions.h"
-#include <string>
 
 namespace FCPLib {
+
+class JobTicket;
+typedef boost::shared_ptr<JobTicket> JobTicketPtr;
 
 class ServerMessage {
   void read(boost::shared_ptr<Server> s);
@@ -19,7 +24,7 @@ public:
   static Ptr factory(boost::shared_ptr<Server> s);
 
   virtual std::string getIdOfJob() const = 0;
-  virtual bool isLast(const std::string &cmd) const = 0;
+  virtual bool isLast(const JobTicketPtr job) const = 0;
   virtual bool isError() const = 0;
   virtual ~ServerMessage() {}
 
@@ -32,37 +37,19 @@ typedef std::vector<ServerMessage::Ptr> Response;
 
 template<bool isLast>
 struct IsLastT {
-  bool operator()(const std::string &cmd) const {
+  bool operator()(const JobTicketPtr job) const {
     return isLast;
-  };
+  }
 };
 typedef IsLastT<true> IsLastTrue;
 typedef IsLastT<false> IsLastFalse;
 
 struct IsLastPeer {
-  bool operator()(const std::string &cmd) const {
-    if (cmd == "ListPeers")
-      return false;
-    else if (cmd == "ModifyPeer")
-      return true;
-    else if (cmd == "AddPeer")
-      return true;
-    else if (cmd == "ListPeer")
-      return true;
-    //TODO: check if this is all
-    throw std::runtime_error("Unknown command");
-  }
+  bool operator()(const JobTicketPtr job) const;
 };
 
 struct IsLastPeerNote {
-  bool operator()(const std::string &cmd) const {
-    if (cmd == "ListPeerNotes")
-      return false;
-    else if (cmd == "ModifyPeerNote")
-      return true;
-    //TODO: check if this is all
-    throw std::runtime_error("Unknown command");
-  }
+  bool operator()(const JobTicketPtr job) const;
 };
 
 template<typename isLastT = IsLastTrue, bool isErrorT = false>
@@ -73,8 +60,8 @@ public:
     std::string id = message->getField("Identifier");
     return  id.size() ? id : "";
   }
-  bool isLast(const std::string &cmd) const {
-    return isLastT()( cmd );
+  bool isLast(const JobTicketPtr job) const {
+    return isLastT()( job );
   }
   bool isError() const {
     return isErrorT;

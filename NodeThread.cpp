@@ -104,7 +104,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
 
   std::string tmp = message->getMessage()->getField("Global");
   tmp = tmp == "" ? "false" : tmp;
-  int isGlobal = boost::lexical_cast<int>(tmp);
+  int isGlobal = boost::lexical_cast<bool>(tmp) ? 1 : 0;
 
   it = jobs[isGlobal].find(message->getIdOfJob());
   if (it == jobs[isGlobal].end()) {
@@ -130,7 +130,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
 
   job = it->second;
 
-  if ( message->isLast( job->getCommandName() ) ) {
+  if ( message->isLast( job ) ) {
     log().log(NOISY, "doMessage : last message for the job");
     job->putResponse(1, message);
     job->putResult();

@@ -209,7 +209,7 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
 
   m->setField("NodeIdentifier", nodeIdentifier);
   m->setField("NoteText", Base64::base64Encode((const unsigned char*)noteText.c_str(), noteText.size()));
-  m->setField("PeerNoteType", peerNoteType);
+  m->setField("PeerNoteType", boost::lexical_cast<string>( peerNoteType ));
 
   JobTicket::Ptr job = JobTicket::factory( "", m );
   clientReqQueue->put(job);
@@ -597,10 +597,10 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
 }
 
 JobTicket::Ptr
-Node::subscribeUSK(const std::string USK, const std::string id, bool dontPoll)
+Node::subscribeUSK(const std::string URI, const std::string id, bool dontPoll)
 {
   Message::Ptr m = Message::factory( std::string("SubscribeUSK") );
-  m->setField("USK", USK);
+  m->setField("URI", URI);
   m->setField("Identifier", id);
   m->setField("DontPoll", Converter::toString( dontPoll ));
 

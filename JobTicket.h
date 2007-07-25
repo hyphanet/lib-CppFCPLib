@@ -2,8 +2,8 @@
 #define JOBTICKET_H__
 
 #include "Message.h"
-#include "ServerMessage.h"
 #include "Exceptions.h"
+#include "ServerMessage.h"
 
 #include <vector>
 #include <iostream>
@@ -23,7 +23,7 @@ class Node;
 
 class JobTicket {
 public:
-  typedef boost::shared_ptr<JobTicket > Ptr;
+  typedef boost::shared_ptr<JobTicket> Ptr;
 private:
   std::string id;
   Message::Ptr cmd;
@@ -96,7 +96,6 @@ public:
   friend class Node;
   friend class NodeThread;
 };
-
 
 }
 

@@ -1,6 +1,7 @@
 
 #include "Log.h"
 #include "ServerMessage.h"
+#include "JobTicket.h"
 
 using namespace FCPLib;
 
@@ -141,4 +142,32 @@ void ServerMessage::read(boost::shared_ptr<Server> s)
 const std::string&
 ServerMessage::toString() const {
   return message->toString();
+}
+
+bool
+IsLastPeer::operator()(const JobTicket::Ptr job) const
+{
+    std::string cmd( job->getCommandName() );
+    if (cmd == "ListPeers")
+      return false;
+    else if (cmd == "ModifyPeer")
+      return true;
+    else if (cmd == "AddPeer")
+      return true;
+    else if (cmd == "ListPeer")
+      return true;
+
+    throw NotImplemented("Unknown command");
+}
+
+bool
+IsLastPeerNote::operator()(const JobTicket::Ptr job) const
+{
+    std::string cmd( job->getCommandName() );
+    if (cmd == "ListPeerNotes")
+      return false;
+    else if (cmd == "ModifyPeerNote")
+      return true;
+
+    throw NotImplemented("Unknown command");
 }

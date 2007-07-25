@@ -79,9 +79,9 @@ private:
     this->f = f;
   }
 public:
-  const std::string& getCommandName() const;
-  const std::string& getId() const;
-  const Message::Ptr getCommand() const;
+  const std::string& getCommandName() const { return cmd->getHeader(); }
+  const std::string& getId() const { return id; }
+  const Message::Ptr getCommand() const { return cmd; }
 
   void wait(unsigned int timeout_=0);
   void waitTillReqSent(unsigned int timeout);

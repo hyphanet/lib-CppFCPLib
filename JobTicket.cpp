@@ -24,17 +24,6 @@ JobTicket::factory(std::string id, Message::Ptr cmd)
    return ret;
 }
 
-const std::string&
-JobTicket::getId() const {
-  return id;
-}
-
-const std::string&
-JobTicket::getCommandName() const
-{
-  return cmd->getHeader();
-}
-
 void
 JobTicket::wait(unsigned int timeout)
 {

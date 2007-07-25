@@ -633,3 +633,30 @@ Node::refreshPersistentRequest()
   log().log(DEBUG, "waiting for EndListPersistentRequests message");
   job->wait(globalCommandsTimeout);
 }
+
+void
+Node::shutdown()
+{
+  log().log(DEBUG, "about to shutdown the node");
+  Message::Ptr m = Message::factory( std::string("Shutdown") );
+  JobTicket::Ptr job = JobTicket::factory( "", m );
+  clientReqQueue->put(job);
+
+  try {
+    job->wait(globalCommandsTimeout);
+    Response resp = job->getResponse();
+
+    try {
+      checkProtocolError(resp);
+    } catch ( FCPException& e) {
+      if ( boost::lexical_cast<int>( e.getMessage()->getField("Code") ) != 18 )
+        throw e;
+      executor.interrupt();
+      log().log(DEBUG, "node is shutdown");
+    }
+  } catch (...) {
+    log().log(ERROR, "error has occured while node shutdown, kill thread anyway");
+    executor.interrupt();
+    log().log(DEBUG, "node thread killed");
+  }
+}

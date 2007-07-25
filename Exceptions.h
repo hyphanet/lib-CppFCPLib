@@ -38,6 +38,12 @@ public:
   CommandTimeout(std::string msg) : std::runtime_error(msg) {}
 };
 
+class ConnectionRefused : public std::runtime_error {
+public:
+  ConnectionRefused(std::string msg) : std::runtime_error(msg) {}
+};
+
+
 }
 
 #endif

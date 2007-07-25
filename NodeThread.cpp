@@ -9,13 +9,12 @@ using namespace ZThread;
 
 NodeThread::NodeThread(std::string &host,
                        int port,
-                       ZThread::CountedPtr<TQueue<JobTicket::Ptr> > clientReqQueue_) throw()
+                       JobTicketQueuePtr clientReqQueue_) throw()
   : clientReqQueue(clientReqQueue_),
     host_(host),
     port_(port),
     s(new Server( host_, port_ )),
-    isAlive_(true),
-    jobs( new std::map<std::string, JobTicket::Ptr>() )
+    isAlive_(true)
 {
 }
 
@@ -86,7 +85,7 @@ NodeThread::sendClientReq(JobTicket::Ptr job)
   log().log(NOISY, "sendClientReq : top");
   if (job->getCommandName() != "WatchGlobal") {
     log().log(NOISY, "sendClientReq : about to add the job to the map");
-    (*jobs)[job->getId()] = job;
+    jobs[job->getId()] = job;
     log().log(NOISY, "sendClientReq : added the job to the map");
   }
 
@@ -100,8 +99,8 @@ NodeThread::doMessage(ServerMessage::Ptr message)
   JobTicket::Ptr job;
   std::map<std::string, JobTicket::Ptr>::iterator it;
 
-  it = jobs->find(message->getIdOfJob());
-  if (it == jobs->end()) {
+  it = jobs.find(message->getIdOfJob());
+  if (it == jobs.end()) {
     log().log(DETAIL, "doMessage : received " + message->getMessage()->getHeader() + ", cannot find " + message->getIdOfJob() + " in started jobs");
     /// message from global queue or error
     Message::Ptr m = message->getMessage();
@@ -112,7 +111,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
     } else { // global queue, create a job
       log().log(DEBUG, "doMessage : received message from a global queue");
       JobTicket::Ptr job = JobTicket::factory(m->getField("Identifier"), m, false);
-      (*jobs)[m->getField("Identifier")] = job;
+      jobs[m->getField("Identifier")] = job;
       return;
     }
   }
@@ -126,7 +125,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
 
     if (!job->keep) {
       log().log(NOISY, "doMessage : job should not be kept, erasing");
-      jobs->erase( it );
+      jobs.erase( it );
     }
   }
   else {

@@ -19,9 +19,10 @@ namespace FCPLib {
 class Node;
 
 typedef TQueue< JobTicket::Ptr > JobTicketQueue;
+typedef ZThread::CountedPtr< JobTicketQueue > JobTicketQueuePtr;
 
 class NodeThread : public ZThread::Runnable {
-  ZThread::CountedPtr< JobTicketQueue > clientReqQueue;
+  JobTicketQueuePtr clientReqQueue;
   std::string host_;
   int port_;
   boost::shared_ptr<Server> s;
@@ -29,10 +30,10 @@ class NodeThread : public ZThread::Runnable {
   bool isAlive_;
   ZThread::CountedPtr<std::exception> exception;
 
-  ZThread::CountedPtr< std::map<std::string, JobTicket::Ptr > > jobs;
+  std::map<std::string, JobTicket::Ptr > jobs;
 
   friend class Node;
-  NodeThread(std::string &host, int port, ZThread::CountedPtr< JobTicketQueue > clientReqQueue_) throw();
+  NodeThread(std::string &host, int port, JobTicketQueuePtr clientReqQueue_) throw();
 
   void sendClientReq(JobTicket::Ptr job);
   void doMessage(ServerMessage::Ptr message);

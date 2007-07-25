@@ -4,7 +4,6 @@ Todo
 *  work on logging messages...
 *  peerNoteType is always one? 
 *  how should I read a file from TestDDAReply (binary mode or textual mode)
-*  delete created tmp file in TestDDA
 *  what to do with Error messages without Identifier... queue<Message> in NodeThread? provide callback?
 *  how to watch global queue?
 *  throwing library specific exceptions?
@@ -19,5 +18,3 @@ Questions
 =========
 
 *  how to use bug tracking tools and other stuff available for developers
-*  providing confirmation message
-*  what does ListPersistentRequests return?

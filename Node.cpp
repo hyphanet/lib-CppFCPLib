@@ -45,7 +45,14 @@ Node::Node(std::string name_, std::string host, int port)
     name = Node::_getUniqueId();
   log().log(DEBUG, "Node started name=" + name + "\n");
 
-  nodeThread = new NodeThread(host, port, clientReqQueue);
+  try
+  {
+    nodeThread = new NodeThread(host, port, clientReqQueue);
+  }
+  catch (boost::system::system_error &e)
+  {
+    throw ConnectionRefused(e.what());
+  }
   executor.execute( nodeThread );
 
   Message::Ptr m = Message::factory(std::string("ClientHello"));

@@ -616,16 +616,17 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   {
     // error, try direct mode
 
-    std::ifstream is(filename.c_str(), std::ios::binary);
-    if (!is.is_open()) {
+    std::ifstream* is = new std::ifstream(filename.c_str(), std::ios::binary);
+    if (!is->is_open()) {
+      delete is;
       log().log(ERROR, "Error while opening file :: " + filename);
       throw FileError("Error while opening file.", filename);
     }
-    is.seekg(0, std::ios_base::end);
-    int pos = is.tellg();
-    is.seekg(0, std::ios_base::beg);
+    is->seekg(0, std::ios_base::end);
+    int pos = is->tellg();
+    is->seekg(0, std::ios_base::beg);
 
-    return putData(URI, &is, pos, id, fields);
+    return putData(URI, is, pos, id, fields);
   }
 }
 

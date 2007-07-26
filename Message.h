@@ -56,7 +56,7 @@ public:
   const std::string& toString();
   void toSocket(boost::asio::ip::tcp::socket& socket);
 
-  ~DataMessage() {}
+  ~DataMessage() { if (stream_ != NULL) delete stream_; }
   friend class Message;
 };
 

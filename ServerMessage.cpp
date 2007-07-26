@@ -70,10 +70,10 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
     m = Ptr( new PutFetchableMessage() );
   } else
   if (header == "DataFound") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new DataFoundMessage() );
   } else
   if (header == "AllData") {
-    throw new std::runtime_error("Not implemented " + header);
+    m = Ptr( new AllDataMessage() );
   } else
   if (header == "StartedCompression") {
     m = Ptr( new StartedCompressionMessage() );
@@ -123,7 +123,8 @@ ServerMessage::factory(boost::shared_ptr<Server> s){
   return m;
 }
 
-void ServerMessage::read(boost::shared_ptr<Server> s)
+void
+ServerMessage::read(boost::shared_ptr<Server> s)
 {
   std::string line;
   for (;;) {
@@ -191,6 +192,25 @@ IsLastGetFailed::operator()(const JobTicketPtr job) const
   return true;
 }
 
-struct IsLastGetFailed {
-  bool operator()(const JobTicketPtr job) const;
-};
+void
+AllDataMessage::read(boost::shared_ptr<Server> s)
+{
+  server = s;
+  std::string line;
+  for (;;) {
+    line = s->readln();
+
+    log().log(DETAIL, "NODE: " + line);
+
+    if ( line == "Data" )
+      break;
+
+    int pos = line.find_first_of('=');
+
+    message->setField(std::string(line.begin(), line.begin() + pos),
+                      std::string(line.begin() + pos + 1, line.end()));
+  }
+
+  bytesToRead = boost::lexical_cast<int>( message->getField("DataLength") );
+  log().log(DETAIL, " ... " + message->getField("DataLength") + " bytes of data ...");
+}

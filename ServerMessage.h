@@ -14,7 +14,7 @@ class JobTicket;
 typedef boost::shared_ptr<JobTicket> JobTicketPtr;
 
 class ServerMessage {
-  void read(boost::shared_ptr<Server> s);
+  virtual void read(boost::shared_ptr<Server> s);
 
 protected:
   Message::Ptr message;
@@ -23,7 +23,10 @@ public:
   typedef boost::shared_ptr<ServerMessage> Ptr;
   static Ptr factory(boost::shared_ptr<Server> s);
 
-  virtual std::string getIdOfJob() const = 0;
+  std::string getIdOfJob() const {
+    std::string id = message->getField("Identifier");
+    return  id.size() ? id : "";
+  }
   virtual bool isLast(const JobTicketPtr job) const = 0;
   virtual bool isError() const = 0;
   virtual ~ServerMessage() {}
@@ -75,16 +78,26 @@ template<typename isLastT = IsLastTrue, bool isErrorT = false>
 class ServerMessageT : public ServerMessage {
   ServerMessageT() {}
 public:
-  inline std::string getIdOfJob() const {
-    std::string id = message->getField("Identifier");
-    return  id.size() ? id : "";
-  }
+
   bool isLast(const JobTicketPtr job) const {
     return isLastT( message )( job );
   }
   bool isError() const {
     return isErrorT;
   }
+  friend class ServerMessage;
+};
+
+class AllDataMessage : public ServerMessage {
+  boost::shared_ptr<Server> server;
+  int bytesToRead;
+
+  void read(boost::shared_ptr<Server> s);
+
+  AllDataMessage() {}
+public:
+  bool isLast(const JobTicketPtr job) const { return true; }
+  bool isError() const { return false; }
   friend class ServerMessage;
 };
 
@@ -110,6 +123,7 @@ typedef class ServerMessageT<IsLastFalse, false> PersistentPutDirMessage;
 typedef class ServerMessageT<IsLastFalse, false> URIGeneratedMessage;
 typedef class ServerMessageT<IsLastTrue, false> PutSuccessfulMessage;
 typedef class ServerMessageT<IsLastFalse, false> PutFetchableMessage;
+typedef class ServerMessageT<IsLastFalse, false> DataFoundMessage;
 
 typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
 typedef class ServerMessageT<IsLastFalse, false> FinishedCompressionMessage;

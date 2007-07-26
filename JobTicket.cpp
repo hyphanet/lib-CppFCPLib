@@ -13,15 +13,21 @@ JobTicket::factory(std::string id, Message::Ptr cmd)
 {
    log().log(NOISY, "Creating " + cmd->getHeader());
    Ptr ret( new JobTicket() );
+   ret->init(id, cmd);
 
-   ret->id = id;
-   ret->cmd = cmd;
-
-   ret->lock.acquire();
-   ret->reqSentLock.acquire();
-
-   log().log(DEBUG, ret->toString());
    return ret;
+}
+
+void
+JobTicket::init(std::string &id, Message::Ptr cmd)
+{
+   this->id = id;
+   this->cmd = cmd;
+
+   this->lock.acquire();
+   this->reqSentLock.acquire();
+
+   log().log(DEBUG, this->toString());
 }
 
 void
@@ -106,4 +112,14 @@ JobTicket::putResult()
   ZThread::Guard<ZThread::Mutex> g(access);
   _isFinished = true;
   lock.release();
+}
+
+GetJob::Ptr
+GetJob::factory(std::string id, Message::Ptr cmd)
+{
+  log().log(NOISY, "Creating " + cmd->getHeader());
+  Ptr ret( new GetJob() );
+  ret->init(id, cmd);
+
+  return ret;
 }

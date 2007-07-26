@@ -48,7 +48,10 @@ class DataMessage : public Message {
   std::istream *stream_;
   int dataLength_;
 protected:
-  DataMessage() { isDataType = true; }
+  DataMessage()
+    : stream_(NULL),
+      dataLength_(0)
+  { isDataType = true; }
 public:
   typedef boost::shared_ptr<DataMessage> Ptr;
 

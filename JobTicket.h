@@ -24,7 +24,11 @@ class Node;
 class JobTicket {
 public:
   typedef boost::shared_ptr<JobTicket> Ptr;
+
 private:
+  static Ptr factory(std::string id, Message::Ptr cmd);
+
+protected:
   std::string id;
   Message::Ptr cmd;
 
@@ -47,17 +51,6 @@ private:
 
   boost::function<void (int, const ServerMessage::Ptr)> f;
 
-  void putResult();
-  // status... last message -- 0, not last message -- 1
-  void putResponse(int status, ServerMessage::Ptr m)
-  {
-    ZThread::Guard<ZThread::Mutex> g(access);
-    if (f) f(status, m);
-    if (nodeResponse.empty())
-      reqSentLock.release(); // first message has arrived, so it has been successfully submitted
-    nodeResponse.push_back(m);
-  }
-
   JobTicket()
     : keep(false),
       global(false),
@@ -65,7 +58,8 @@ private:
       isReprValid(false),
       _isFinished(false)
   {}
-  static Ptr factory(std::string id, Message::Ptr cmd);
+
+  void init(std::string &id, Message::Ptr cmd);
 
   JobTicket& setKeep( bool x ) { keep = x; return *this; };
   JobTicket& setGlobal( bool x ) { global = x; return *this; };
@@ -78,7 +72,20 @@ private:
   {
     this->f = f;
   }
+  void putResult();
+  // status... last message -- 0, not last message -- 1
+  void putResponse(int status, ServerMessage::Ptr m)
+  {
+    ZThread::Guard<ZThread::Mutex> g(access);
+    if (f) f(status, m);
+    if (nodeResponse.empty())
+      reqSentLock.release(); // first message has arrived, so it has been successfully submitted
+    nodeResponse.push_back(m);
+  }
+
 public:
+  virtual ~JobTicket() {}
+
   const std::string& getCommandName() const { return cmd->getHeader(); }
   const std::string& getId() const { return id; }
   const Message::Ptr getCommand() const { return cmd; }
@@ -101,6 +108,27 @@ public:
     ZThread::Guard<ZThread::Mutex> g(access);
     return _isFinished;
   }
+
+  friend class Node;
+  friend class NodeThread;
+};
+
+class GetJob : public JobTicket {
+public:
+  typedef boost::shared_ptr<GetJob> Ptr;
+
+private:
+  std::ostream *stream;
+  GetJob()
+    : JobTicket(),
+      stream(NULL)
+  {}
+
+  static Ptr factory(std::string id, Message::Ptr cmd);
+  GetJob& setStream( std::ostream *s ) { stream = s; return *this; }
+public:
+  ~GetJob() { if (stream != NULL) delete stream; }
+  std::ostream& getStream() { return *stream; }
 
   friend class Node;
   friend class NodeThread;

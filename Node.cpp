@@ -487,7 +487,7 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
 
   m->setField("URI", URI);
   m->setField("Identifier", id == "" ? _getUniqueId() : id);
-  if (fields.hasField("mimetype")) m->setField("Metadata.ContentType", fields.getField("mimetype"));
+  if (fields.hasField("Metadata.ContentType")) m->setField("Metadata.ContentType", fields.getField("Metadata.ContentType"));
   if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
   if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
   if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
@@ -572,7 +572,7 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
 
   m->setField("URI", URI);
   m->setField("Identifier", identifier);
-  if (fields.hasField("mimetype")) m->setField("Metadata.ContentType", fields.getField("mimetype"));
+  if (fields.hasField("Metadata.ContentType")) m->setField("Metadata.ContentType", fields.getField("Metadata.ContentType"));
   if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
   if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
   if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
@@ -628,6 +628,62 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
 
     return putData(URI, is, pos, id, fields);
   }
+}
+
+JobTicket::Ptr
+Node::getDisk(const std::string URI, const std::string filename, const std::string id, const AdditionalFields& fields )
+{
+  std::string identifier = id == "" ? _getUniqueId() : id;
+  bool persistent = fields.hasField("Persistence") && fields.getField("Persistence") != "connection";
+  bool global = fields.hasField("Global") && fields.getField("Global") == "true";
+  if (global && !persistent)
+    throw std::invalid_argument("Global requests must be persistent");
+
+  // TestDDA, we want to write somethig from a filesystem
+  // extract dir
+  boost::filesystem::path filePath( filename );
+  std::string dir = filePath.branch_path().string();
+  TestDDAResponse r = this->testDDA(dir, false, true); // read only
+
+  if ( r.writeDirectory ) {
+    Message::Ptr m = Message::factory( std::string("ClientGet") );
+
+    m->setField("URI", URI);
+    m->setField("Identifier", identifier);
+    if (fields.hasField("IgnoreDS")) m->setField("IgnoreDS", fields.getField("IgnoreDS"));
+    if (fields.hasField("DSonly")) m->setField("DSonly", fields.getField("DSonly"));
+    if (fields.hasField("Verbosity")) m->setField("Verbosity", fields.getField("Verbosity"));
+    if (fields.hasField("MaxSize")) m->setField("MaxSize", fields.getField("MaxSize"));
+    if (fields.hasField("MaxTempSize")) m->setField("MaxTempSize", fields.getField("MaxTempSize"));
+    if (fields.hasField("MaxRetries")) m->setField("MaxRetries", fields.getField("MaxRetries"));
+    if (fields.hasField("PriorityClass")) m->setField("PriorityClass", fields.getField("PriorityClass"));
+    if (fields.hasField("Persistence"))
+      m->setField("Persistence", fields.getField("Persistence"));
+    else
+      m->setField("Persistence", "connection");
+    if (fields.hasField("ClientToken")) m->setField("ClientToken", fields.getField("ClientToken"));
+    m->setField("Global", Converter::toString(global));
+    m->setField("ReturnType", "disk");
+    if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
+    if (fields.hasField("AllowedMIMETypes")) m->setField("AllowedMIMETypes", fields.getField("AllowedMIMETypes"));
+    m->setField("Filename", filename);
+    if (fields.hasField("TempFilename")) m->setField("TempFilename", fields.getField("TempFilename"));
+
+    JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+    job->setGlobal( global ).setPersistent( persistent );
+
+    clientReqQueue->put(job);
+
+    return job;
+  }
+
+  // allow fallback to direct only to non persistent requests
+  // otherwise you can start a direct get with intention to store the data to disk
+  // but when client loses a connection it loses information where to store data as well
+  if ( !r.writeDirectory && persistent )
+    throw TestDDAError("TestDDA write failed");
+
+  // TODO :: implement fallback
 }
 
 JobTicket::Ptr

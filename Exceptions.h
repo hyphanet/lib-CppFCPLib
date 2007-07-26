@@ -43,6 +43,11 @@ public:
   ConnectionRefused(std::string msg) : std::runtime_error(msg) {}
 };
 
+class TestDDAError : public std::runtime_error {
+public:
+  TestDDAError(std::string msg) : std::runtime_error(msg) {}
+};
+
 
 }
 

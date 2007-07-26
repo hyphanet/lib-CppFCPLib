@@ -88,6 +88,14 @@ public:
                          const AdditionalFields& = AdditionalFields()
                          );
 
+  JobTicket::Ptr getDisk(const std::string , // URI
+                         const std::string , // Filename
+                         const std::string = "", // Identifier
+                         const AdditionalFields& = AdditionalFields()
+                         );
+
+
+
   JobTicket::Ptr subscribeUSK(const std::string, const std::string, bool);
 
   void watchGlobal( bool enabled, int verbosity );

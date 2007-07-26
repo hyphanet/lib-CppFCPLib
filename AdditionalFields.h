@@ -16,8 +16,8 @@ public:
   void addField(std::string key, int value) {
     fields[key] = boost::lexical_cast<std::string>(value);
   }
-  void addField(std::string key, std::string value) {
-    fields[key] = value;
+  void addField(std::string key, char* value) {
+    fields[key] = std::string( value );
   }
   void addField(std::string key, bool value) {
     fields[key] = Converter::toString( value );

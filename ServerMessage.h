@@ -123,13 +123,13 @@ typedef class ServerMessageT<IsLastFalse, false> PersistentPutDirMessage;
 typedef class ServerMessageT<IsLastFalse, false> URIGeneratedMessage;
 typedef class ServerMessageT<IsLastTrue, false> PutSuccessfulMessage;
 typedef class ServerMessageT<IsLastFalse, false> PutFetchableMessage;
-typedef class ServerMessageT<IsLastFalse, false> DataFoundMessage;
+typedef class ServerMessageT<IsLastTrue, false> DataFoundMessage;
 
 typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
 typedef class ServerMessageT<IsLastFalse, false> FinishedCompressionMessage;
 typedef class ServerMessageT<IsLastFalse, false> SimpleProgressMessage;
 typedef class ServerMessageT<IsLastTrue, false> PersistentRequestRemovedMessage;
-typedef class ServerMessageT<IsLastTrue, false> PersistentRequestModifiedMessage;
+typedef class ServerMessageT<IsLastFalse, false> PersistentRequestModifiedMessage;
 
 typedef class ServerMessageT<IsLastPutFailed, true> PutFailedMessage;
 typedef class ServerMessageT<IsLastGetFailed, true> GetFailedMessage;

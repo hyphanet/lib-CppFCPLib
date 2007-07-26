@@ -51,15 +51,18 @@ void NodeThread::run(){
     // thread was interupted, normal way to shutdown the thread
     // this object will be destroyed
     log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
+    log().log(ERROR, e.what());
     return;
   } catch (std::runtime_error& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::runtime_error");
+    log().log(ERROR, e.what());
     isAlive_ = false;
     exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e) );
   } catch (std::exception& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::exception");
+    log().log(ERROR, e.what());
     isAlive_ = false;
     exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
   } catch (...) {
@@ -104,7 +107,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
 
   std::string tmp = message->getMessage()->getField("Global");
   tmp = tmp == "" ? "false" : tmp;
-  int isGlobal = boost::lexical_cast<bool>(tmp) ? 1 : 0;
+  int isGlobal = tmp == "false" ? 0 : 1;
 
   it = jobs[isGlobal].find(message->getIdOfJob());
   if (it == jobs[isGlobal].end()) {
@@ -123,8 +126,8 @@ NodeThread::doMessage(ServerMessage::Ptr message)
         return;
       }
       JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
-      job->setGlobal(true).setPersistent(true);
-      jobs[1][m->getField("Identifier")] = job;
+      job->setGlobal(isGlobal).setPersistent(true);
+      jobs[isGlobal][m->getField("Identifier")] = job;
       return;
     }
   }

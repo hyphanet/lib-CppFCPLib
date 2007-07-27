@@ -239,10 +239,11 @@ AllDataMessage::isLast(const JobTicketPtr job) const
   while (tmp > 0) {
     int m = std::min<int>(tmp, 1024);
     server->read(boost::asio::buffer(buf, m));
-    log().log(DEBUG, "NODE: read "+ boost::lexical_cast<string>( m ) + " bytes of data\n");
     stream.write(buf, m);
     tmp -= m;
+    log().log(DEBUG, "NODE: read "+ boost::lexical_cast<string>( m ) + " bytes of data, " + boost::lexical_cast<string>( tmp ) +  " still left");
   }
+  stream.flush();
 
   return true;
 }

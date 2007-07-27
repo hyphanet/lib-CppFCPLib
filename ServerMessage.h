@@ -128,7 +128,7 @@ typedef class ServerMessageT<IsLastFalse, false> PersistentPutDirMessage;
 typedef class ServerMessageT<IsLastFalse, false> URIGeneratedMessage;
 typedef class ServerMessageT<IsLastTrue, false> PutSuccessfulMessage;
 typedef class ServerMessageT<IsLastFalse, false> PutFetchableMessage;
-typedef class ServerMessageT<IsLastTrue, false> DataFoundMessage;
+typedef class ServerMessageT<IsLastDataFound, false> DataFoundMessage;
 
 typedef class ServerMessageT<IsLastFalse, false> StartedCompressionMessage;
 typedef class ServerMessageT<IsLastFalse, false> FinishedCompressionMessage;

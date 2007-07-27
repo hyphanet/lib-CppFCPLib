@@ -98,13 +98,15 @@ JobTicket::toString()
   repr = "";
   isReprValid = true;
 
-  repr += "Job id=" + id + " " +
-             " keepJob=" + Converter::toString( keep ) + "\n";
+  repr += "Job id=" + id +
+             " keepJob=" + Converter::toString( keep ) +
+             " global=" + Converter::toString( global ) +
+             " persistent=" + Converter::toString( persistent ) + "\n";
+
   repr += "Message=" + cmd->getHeader();
 
   return repr;
 }
-
 
 void
 JobTicket::putResult()
@@ -122,4 +124,24 @@ GetJob::factory(std::string id, Message::Ptr cmd)
   ret->init(id, cmd);
 
   return ret;
+}
+
+const std::string&
+GetJob::toString()
+{
+  if (isReprValid)
+    return repr;
+
+  repr = "";
+  isReprValid = true;
+
+  repr += "Job id=" + id + " " +
+             " keepJob=" + Converter::toString( keep ) +
+             " global=" + Converter::toString( global ) +
+             " persistent=" + Converter::toString( persistent ) +
+             " returnType=" + boost::lexical_cast<string>( retType )+ "\n";
+
+  repr += "Message=" + cmd->getHeader();
+
+  return repr;
 }

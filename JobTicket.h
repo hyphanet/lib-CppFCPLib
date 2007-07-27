@@ -98,7 +98,7 @@ public:
     ZThread::Guard<ZThread::Mutex> g(access);
     return Response( nodeResponse );
   }
-  const std::string& toString();
+  virtual const std::string& toString();
 
   bool isGlobal() const { return global; }
   bool isPersistent() const { return persistent; }
@@ -134,6 +134,8 @@ public:
   ~GetJob() { if (stream != NULL) delete stream; }
   std::ostream& getStream() { return *stream; }
   ReturnType getReturnType() const { return retType; }
+
+  const std::string& toString();
 
   friend class Node;
   friend class NodeThread;

@@ -21,6 +21,7 @@ class Server {
 public:
   ~Server();
   std::string readln();
+  void read(boost::asio::mutable_buffers_1);
   void send(const std::string &s);
   void send(Message::Ptr m);
   bool dataAvailable();

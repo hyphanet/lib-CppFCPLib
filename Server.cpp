@@ -63,3 +63,9 @@ void Server::send(const Message::Ptr m)
 bool Server::dataAvailable(){
   return socket_->available() != 0 || response.size() != 0;
 }
+
+void
+Server::read(boost::asio::mutable_buffers_1 buf)
+{
+  boost::asio::read(*socket_, buf);
+}

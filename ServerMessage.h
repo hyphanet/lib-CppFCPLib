@@ -73,6 +73,11 @@ struct IsLastGetFailed {
   bool operator()(const JobTicketPtr job) const;
 };
 
+struct IsLastDataFound {
+  Message::Ptr message;
+  IsLastDataFound( Message::Ptr m ) : message(m) {}
+  bool operator()(const JobTicketPtr job) const;
+};
 
 template<typename isLastT = IsLastTrue, bool isErrorT = false>
 class ServerMessageT : public ServerMessage {
@@ -96,7 +101,7 @@ class AllDataMessage : public ServerMessage {
 
   AllDataMessage() {}
 public:
-  bool isLast(const JobTicketPtr job) const { return true; }
+  bool isLast(const JobTicketPtr job) const;
   bool isError() const { return false; }
   friend class ServerMessage;
 };

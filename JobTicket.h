@@ -116,19 +116,24 @@ public:
 class GetJob : public JobTicket {
 public:
   typedef boost::shared_ptr<GetJob> Ptr;
+  enum ReturnType { Direct, Disk, None };
 
 private:
+  ReturnType retType;
   std::ostream *stream;
   GetJob()
     : JobTicket(),
+      retType(Direct),
       stream(NULL)
   {}
 
   static Ptr factory(std::string id, Message::Ptr cmd);
   GetJob& setStream( std::ostream *s ) { stream = s; return *this; }
+  GetJob& setReturnType( ReturnType r ) { retType = r; return *this; }
 public:
   ~GetJob() { if (stream != NULL) delete stream; }
   std::ostream& getStream() { return *stream; }
+  ReturnType getReturnType() const { return retType; }
 
   friend class Node;
   friend class NodeThread;

@@ -192,6 +192,18 @@ IsLastGetFailed::operator()(const JobTicketPtr job) const
   return true;
 }
 
+bool
+IsLastDataFound::operator()(const JobTicketPtr job) const
+{
+  GetJob::Ptr job_ = boost::dynamic_pointer_cast<GetJob, JobTicket>( job );
+
+  if ( job_->getReturnType() != GetJob::Direct )
+    return true;
+
+  // non persistent job needs to ask for AllData
+  return job_->isPersistent();
+}
+
 void
 AllDataMessage::read(boost::shared_ptr<Server> s)
 {
@@ -213,4 +225,24 @@ AllDataMessage::read(boost::shared_ptr<Server> s)
 
   bytesToRead = boost::lexical_cast<int>( message->getField("DataLength") );
   log().log(DETAIL, " ... " + message->getField("DataLength") + " bytes of data ...");
+}
+
+bool
+AllDataMessage::isLast(const JobTicketPtr job) const
+{
+  GetJob::Ptr job_ = boost::dynamic_pointer_cast<GetJob, JobTicket>( job );
+
+  std::ostream& stream = job_->getStream();
+  char buf[1024];
+
+  int tmp = bytesToRead;
+  while (tmp > 0) {
+    int m = std::min<int>(tmp, 1024);
+    server->read(boost::asio::buffer(buf, m));
+    log().log(DEBUG, "NODE: read "+ boost::lexical_cast<string>( m ) + " bytes of data\n");
+    stream.write(buf, m);
+    tmp -= m;
+  }
+
+  return true;
 }

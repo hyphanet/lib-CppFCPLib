@@ -94,6 +94,11 @@ public:
                          const AdditionalFields& = AdditionalFields()
                          );
 
+  JobTicket::Ptr fetchData(const std::string , // URI
+                           const std::string = "", // Identifier
+                           const AdditionalFields& = AdditionalFields()
+                           );
+
 
 
   JobTicket::Ptr subscribeUSK(const std::string, const std::string, bool);

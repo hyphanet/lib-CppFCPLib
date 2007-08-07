@@ -19,12 +19,12 @@ Server::Server(std::string &host, int port)
     if ( port == -1 ) port = 9481;
 
     tcp::resolver resolver(io_service);
-    tcp::resolver::query query(host, boost::lexical_cast<string>(port));
+    tcp::resolver::query query(host, boost::lexical_cast<std::string>(port));
     tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
     tcp::resolver::iterator end;
 
     // Try each endpoint until we successfully establish a connection.
-    socket_ = auto_ptr<boost::asio::ip::tcp::socket>( new boost::asio::ip::tcp::socket(io_service) );
+    socket_ = std::auto_ptr<boost::asio::ip::tcp::socket>( new boost::asio::ip::tcp::socket(io_service) );
     boost::system::error_code error = boost::asio::error::host_not_found;
     while (error && endpoint_iterator != end)
     {

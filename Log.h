@@ -8,8 +8,6 @@
 #include <iostream>
 #include <string>
 
-using namespace std;
-
 namespace FCPLib {
 
 typedef enum {
@@ -23,18 +21,26 @@ typedef enum {
     NOISY,
 } verbosityLevel;
 
+class Logger;
+
+Logger&
+log(std::ostream &out_=std::cerr, verbosityLevel logLevel_=DEBUG);
+
 class Logger{
+  friend Logger& log(std::ostream&, verbosityLevel);
+
   ZThread::Mutex lock;
-  ostream &out;
+  std::ostream &out;
   verbosityLevel logLevel;
+
+  Logger(std::ostream &out_, verbosityLevel logLevel_=ERROR);
 public:
-    Logger(ostream &out_, verbosityLevel logLevel_=ERROR);
-    void log(verbosityLevel logLevel, const char *message);
-    void log(verbosityLevel logLevel, string message);
+  void log(verbosityLevel logLevel, const char *message);
+  void log(verbosityLevel logLevel, std::string message);
 };
 
 }
 
-FCPLib::Logger& log(ostream &out_=cerr, FCPLib::verbosityLevel logLevel_=FCPLib::DEBUG);
+
 
 #endif

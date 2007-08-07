@@ -10,15 +10,15 @@
 using namespace FCPLib;
 using namespace ZThread;
 
-NodeThread::NodeThread(std::string &host,
+NodeThread::NodeThread(Node* n,
+                       std::string &host,
                        int port,
                        JobTicketQueuePtr clientReqQueue_) throw()
-  : clientReqQueue(clientReqQueue_),
+  : node(n),
+    clientReqQueue(clientReqQueue_),
     host_(host),
     port_(port),
-    s(new Server( host_, port_ )),
-    isAlive_(true),
-    hasException_(false)
+    s(new Server( host_, port_ ))
 {
 }
 
@@ -53,23 +53,24 @@ void NodeThread::run(){
     // this object will be destroyed
     log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
     log().log(ERROR, e.what());
+    node->setIsAlive(false);
     return;
   } catch (std::runtime_error& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::runtime_error");
     log().log(ERROR, e.what());
-    isAlive_ = false; hasException_ = true;
-    exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e) );
+    node->setIsAlive(false);
+    node->setFailure( std::auto_ptr<std::exception>( new std::runtime_error(e) ) );
   } catch (std::exception& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::exception");
     log().log(ERROR, e.what());
-    isAlive_ = false; hasException_ = true;
-    exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
+    node->setIsAlive(false);
+    node->setFailure( std::auto_ptr<std::exception>( new std::exception(e) ) );
   } catch (...) {
     // thread is stopped and
     log().log(ERROR, "_mgrThreag: Caught something else");
-    isAlive_ = false; hasException_ = false;
+    node->setIsAlive(false);
     return;
   }
   try {
@@ -126,7 +127,7 @@ NodeThread::doMessage(ServerMessage::Ptr message)
         log().log(ERROR, "doMessage : global message does not contain identifier !???");
         return;
       }
-      JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+      JobTicket::Ptr job = JobTicket::factory( this->node, m->getField("Identifier"), m );
       job->setGlobal(isGlobal).setPersistent(true);
       jobs[isGlobal][m->getField("Identifier")] = job;
       return;

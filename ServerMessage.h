@@ -81,29 +81,32 @@ struct IsLastDataFound {
 
 template<typename isLastT = IsLastTrue, bool isErrorT = false>
 class ServerMessageT : public ServerMessage {
-  ServerMessageT() {}
-public:
+  friend class ServerMessage;
 
+  ServerMessageT() {}
+
+public:
   bool isLast(const JobTicketPtr job) const {
     return isLastT( message )( job );
   }
   bool isError() const {
     return isErrorT;
   }
-  friend class ServerMessage;
 };
 
 class AllDataMessage : public ServerMessage {
+  friend class ServerMessage;
+
   boost::shared_ptr<Server> server;
   int bytesToRead;
 
   void read(boost::shared_ptr<Server> s);
 
   AllDataMessage() {}
+
 public:
   bool isLast(const JobTicketPtr job) const;
   bool isError() const { return false; }
-  friend class ServerMessage;
 };
 
 typedef class ServerMessageT<IsLastTrue, false> NodeHelloMessage;

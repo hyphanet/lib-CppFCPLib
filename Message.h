@@ -45,13 +45,17 @@ public:
 };
 
 class DataMessage : public Message {
+  friend class Message;
+
   std::istream *stream_;
   int dataLength_;
+
 protected:
   DataMessage()
     : stream_(NULL),
       dataLength_(0)
   { isDataType = true; }
+
 public:
   typedef boost::shared_ptr<DataMessage> Ptr;
 
@@ -60,7 +64,6 @@ public:
   void toSocket(boost::asio::ip::tcp::socket& socket);
 
   ~DataMessage() { if (stream_ != NULL) delete stream_; }
-  friend class Message;
 };
 
 typedef std::vector<Message::Ptr> MessagePtrContainer;

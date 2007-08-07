@@ -12,6 +12,8 @@
 namespace FCPLib {
 
 class TestDDAReplyResponse {
+  friend struct TestDDAReplyConverter;
+
   Message::Ptr message;
 
   TestDDAReplyResponse(Message::Ptr message_) : message(message_) {}
@@ -37,8 +39,6 @@ public:
   const std::string getContent () const throw(std::logic_error){
     return getField("ContentToWrite");
   }
-
-  friend struct TestDDAReplyConverter;
 };
 
 class TestDDAResponse {

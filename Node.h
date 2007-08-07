@@ -30,6 +30,22 @@ class Node {
   void checkProtocolError(Response &resp);
   Message::Ptr nodeHelloMessage;
 
+  ZThread::Mutex access;
+
+  bool isAlive_, hasException_;
+  std::auto_ptr<std::exception> failure;
+
+  void setIsAlive(bool x) {
+    ZThread::Guard<ZThread::Mutex> g(access);
+    isAlive_ = x;
+  }
+
+  void setFailure(std::auto_ptr<std::exception> e) {
+    ZThread::Guard<ZThread::Mutex> g(access);
+    failure = e;
+    hasException_ = true;
+  }
+
 public:
   Node(std::string name, std::string host, int port);
   ~Node();
@@ -45,17 +61,20 @@ public:
   void shutdown();
 
   bool isAlive() const {
-    return nodeThread->isAlive_;
+    ZThread::Guard<ZThread::Mutex> g(access);
+    return isAlive_;
   }
   bool hasFailure() const {
-    return nodeThread->hasException_;
+    ZThread::Guard<ZThread::Mutex> g(access);
+    return hasException_;
   }
-  std::exception getFailure() const {
-    if ( nodeThread->isAlive_ )
+  std::auto_ptr<std::exception> getFailure() const {
+    ZThread::Guard<ZThread::Mutex> g(access);
+    if ( isAlive_ )
       throw std::logic_error("There is no failure");
-    if (! nodeThread->hasException_ )
+    if (! hasException_ )
       throw std::logic_error("Cannot retrieve the reason of a failure");
-    return *(nodeThread->getFailure());
+    return failure;
   }
 
   const Message::Ptr getNodeHelloMessage() const;

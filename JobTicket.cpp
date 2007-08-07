@@ -9,18 +9,19 @@
 using namespace FCPLib;
 
 JobTicket::Ptr
-JobTicket::factory(std::string id, Message::Ptr cmd)
+JobTicket::factory(Node* n, std::string id, Message::Ptr cmd)
 {
    log().log(NOISY, "Creating " + cmd->getHeader());
    Ptr ret( new JobTicket() );
-   ret->init(id, cmd);
+   ret->init(n, id, cmd);
 
    return ret;
 }
 
 void
-JobTicket::init(std::string &id, Message::Ptr cmd)
+JobTicket::init(Node* n, std::string &id, Message::Ptr cmd)
 {
+   this->node = n;
    this->id = id;
    this->cmd = cmd;
 
@@ -77,6 +78,7 @@ JobTicket::waitTillReqSent(unsigned int timeout)
   unsigned int then = (unsigned int) time(0);
   unsigned int elapsed;
   while (!reqSentLock.tryAcquire(100)){
+
     elapsed = (unsigned int) time(0) - then;
     if (elapsed < timeout){
       ZThread::Thread::sleep(1000);
@@ -139,7 +141,7 @@ GetJob::toString()
              " keepJob=" + Converter::toString( keep ) +
              " global=" + Converter::toString( global ) +
              " persistent=" + Converter::toString( persistent ) +
-             " returnType=" + boost::lexical_cast<string>( retType )+ "\n";
+             " returnType=" + boost::lexical_cast<std::string>( retType )+ "\n";
 
   repr += "Message=" + cmd->getHeader();
 

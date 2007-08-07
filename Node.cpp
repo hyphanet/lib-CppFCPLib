@@ -39,7 +39,9 @@ Node::checkProtocolError(Response &resp)
 Node::Node(std::string name_, std::string host, int port)
   : name(name_),
     clientReqQueue( new TQueue<JobTicket::Ptr>() ),
-    globalCommandsTimeout(20)  // 20 sec
+    globalCommandsTimeout(20),  // 20 sec
+    isAlive_(true),
+    hasException_(false)
 {
   if (!name.size())
     name = Node::_getUniqueId();
@@ -47,7 +49,7 @@ Node::Node(std::string name_, std::string host, int port)
 
   try
   {
-    nodeThread = new NodeThread(host, port, clientReqQueue);
+    nodeThread = new NodeThread(this, host, port, clientReqQueue);
   }
   catch (boost::system::system_error &e)
   {
@@ -59,7 +61,7 @@ Node::Node(std::string name_, std::string host, int port)
   m->setField("Name", name);
   m->setField("ExpectedVersion", "2.0");
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "Node constructor: waiting for response to ClientHello");
@@ -84,7 +86,7 @@ Node::listPeer(const std::string & identifier)
 
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -104,7 +106,7 @@ Node::listPeers(const AdditionalFields& fields)
   if (fields.hasField("WithMetadata")) m->setField("WithMetadata", fields.getField("WithMetadata"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for EndListPeers message");
@@ -123,7 +125,7 @@ Node::listPeerNotes(const std::string& identifier)
   Message::Ptr m = Message::factory( std::string("ListPeerNotes") );
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for EndListPeerNotes message");
@@ -144,7 +146,7 @@ Node::addPeer(const std::string &value, bool isURL = false) {
   else
     m->setField("URL", value);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m);
+  JobTicket::Ptr job = JobTicket::factory( this, "", m);
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -164,7 +166,7 @@ Node::addPeer(const std::map<std::string, std::string> &message)
 
   m->setFields(message);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -188,7 +190,7 @@ Node::modifyPeer(const std::string & nodeIdentifier,
   if (fields.hasField("IsDisabled")) m->setField("IsDisabled", fields.getField("IsDisabled"));
   if (fields.hasField("IsListenOnly")) m->setField("IsListenOnly", fields.getField("IsListenOnly"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for Peer message");
@@ -209,9 +211,9 @@ Node::modifyPeerNote(const std::string & nodeIdentifier,
 
   m->setField("NodeIdentifier", nodeIdentifier);
   m->setField("NoteText", Base64::base64Encode((const unsigned char*)noteText.c_str(), noteText.size()));
-  m->setField("PeerNoteType", boost::lexical_cast<string>( peerNoteType ));
+  m->setField("PeerNoteType", boost::lexical_cast<std::string>( peerNoteType ));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for PeerNote message");
@@ -231,7 +233,7 @@ Node::removePeer(const std::string &identifier)
 
   m->setField("NodeIdentifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for PeerRemoved message");
@@ -253,7 +255,7 @@ Node::getNode(const AdditionalFields& fields)
   if (fields.hasField("WithPrivate")) m->setField("WithPrivate", fields.getField("WithPrivate"));
   if (fields.hasField("WithVolatile")) m->setField("WithVolatile", fields.getField("WithVolatile"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for NodeData message");
@@ -279,7 +281,7 @@ Node::getConfig(const AdditionalFields& fields)
   if (fields.hasField("WithShortDescription")) m->setField("WithShortDescription", fields.getField("WithShortDescription"));
   if (fields.hasField("WithLongDescription")) m->setField("WithLongDescription", fields.getField("WithLongDescription"));
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for ConfigData message");
@@ -298,7 +300,7 @@ Node::modifyConfig(Message::Ptr m)
   if (m->getHeader() != "ModifyConfig")
     throw std::logic_error("ModifyConfig message expected, " + m->getHeader() + " received");
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for ConfigData message");
@@ -322,7 +324,7 @@ Node::testDDARequest(std::string dir, bool read, bool write)
   if (write)
     m->setField("WantWriteDirectory", "true");
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for TestDDAReply");
@@ -344,7 +346,7 @@ Node::testDDAResponse(std::string dir, std::string readContent)
   if (readContent != "")
     m->setField("ReadContent", readContent);
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for TestDDAComplete");
@@ -426,7 +428,7 @@ Node::generateSSK(std::string identifier)
   Message::Ptr m = Message::factory( std::string("GenerateSSK") );
   m->setField("Identifier", identifier);
 
-  JobTicket::Ptr job = JobTicket::factory( identifier, m );
+  JobTicket::Ptr job = JobTicket::factory( this, identifier, m );
   clientReqQueue->put(job);
 
   log().log(DEBUG, "waiting for SSKKeypair message");
@@ -471,7 +473,7 @@ Node::putData(const std::string URI, std::istream* s, int dataLength, const std:
   if (global && !persistent)
     throw std::invalid_argument("Global requests must be persistent");
 
-  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+  JobTicket::Ptr job = JobTicket::factory( this, m->getField("Identifier"), m );
   job->setGlobal( global ).setPersistent( persistent );
   clientReqQueue->put(job);
 
@@ -513,7 +515,7 @@ Node::putRedirect(const std::string URI, const std::string target, const std::st
   if (global && !persistent)
     throw std::invalid_argument("Global requests must be persistent");
 
-  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+  JobTicket::Ptr job = JobTicket::factory( this, m->getField("Identifier"), m );
   job->setGlobal( global ).setPersistent( persistent );
   clientReqQueue->put(job);
 
@@ -600,7 +602,7 @@ Node::putDisk(const std::string URI, const std::string filename, const std::stri
   if (global && !persistent)
     throw std::invalid_argument("Global requests must be persistent");
 
-  JobTicket::Ptr job = JobTicket::factory( m->getField("Identifier"), m );
+  JobTicket::Ptr job = JobTicket::factory( this, m->getField("Identifier"), m );
   job->setGlobal( global ).setPersistent( persistent );
   clientReqQueue->put(job);
 
@@ -777,7 +779,7 @@ Node::subscribeUSK(const std::string URI, const std::string id, bool dontPoll)
   m->setField("Identifier", id);
   m->setField("DontPoll", Converter::toString( dontPoll ));
 
-  JobTicket::Ptr job = JobTicket::factory( id, m );
+  JobTicket::Ptr job = JobTicket::factory( this, id, m );
   clientReqQueue->put(job);
 
   return job;
@@ -790,7 +792,7 @@ Node::watchGlobal( bool enabled, int verbosity )
   m->setField( "Enabled", Converter::toString( enabled ) );
   m->setField( "VerbosityMask", boost::lexical_cast<std::string>(verbosity) );
 
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 }
 
@@ -798,7 +800,7 @@ void
 Node::refreshPersistentRequest()
 {
   Message::Ptr m = Message::factory( std::string("ListPersistentRequest") );
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   // persistent jobs will be updated
@@ -842,7 +844,7 @@ Node::removePersistentRequest( JobTicket::Ptr job )
   m->setField( "Global", Converter::toString( job->isGlobal() ) );
   m->setField( "Identifier", job->getId() );
 
-  JobTicket::Ptr job_ = JobTicket::factory( "", m );
+  JobTicket::Ptr job_ = JobTicket::factory( this, "", m );
   clientReqQueue->put(job_);
 
   // wait on job that is to be cancelled
@@ -871,7 +873,7 @@ Node::modifyPersistentRequest( JobTicket::Ptr job, const AdditionalFields& field
   if (!changed)
     throw std::invalid_argument("Either ClientToken or PriorityClass needs to be defined.");
 
-  JobTicket::Ptr job_ = JobTicket::factory( "", m );
+  JobTicket::Ptr job_ = JobTicket::factory( this, "", m );
   clientReqQueue->put(job_);
 }
 
@@ -880,7 +882,7 @@ Node::shutdown()
 {
   log().log(DEBUG, "about to shutdown the node");
   Message::Ptr m = Message::factory( std::string("Shutdown") );
-  JobTicket::Ptr job = JobTicket::factory( "", m );
+  JobTicket::Ptr job = JobTicket::factory( this, "", m );
   clientReqQueue->put(job);
 
   try {

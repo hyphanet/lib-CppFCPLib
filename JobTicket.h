@@ -22,13 +22,18 @@ class NodeThread;
 class Node;
 
 class JobTicket {
+  friend class Node;
+  friend class NodeThread;
+
 public:
   typedef boost::shared_ptr<JobTicket> Ptr;
 
 private:
-  static Ptr factory(std::string id, Message::Ptr cmd);
+  static Ptr factory(Node* n, std::string id, Message::Ptr cmd);
 
 protected:
+  Node* node;
+
   std::string id;
   Message::Ptr cmd;
 
@@ -108,12 +113,12 @@ public:
     ZThread::Guard<ZThread::Mutex> g(access);
     return _isFinished;
   }
-
-  friend class Node;
-  friend class NodeThread;
 };
 
 class GetJob : public JobTicket {
+  friend class Node;
+  friend class NodeThread;
+
 public:
   typedef boost::shared_ptr<GetJob> Ptr;
   enum ReturnType { Direct, Disk, None };
@@ -121,6 +126,7 @@ public:
 private:
   ReturnType retType;
   std::ostream *stream;
+
   GetJob()
     : JobTicket(),
       retType(Direct),
@@ -130,15 +136,13 @@ private:
   static Ptr factory(std::string id, Message::Ptr cmd);
   GetJob& setStream( std::ostream *s ) { stream = s; return *this; }
   GetJob& setReturnType( ReturnType r ) { retType = r; return *this; }
+
 public:
   ~GetJob() { if (stream != NULL) delete stream; }
   std::ostream& getStream() { return *stream; }
   ReturnType getReturnType() const { return retType; }
 
   const std::string& toString();
-
-  friend class Node;
-  friend class NodeThread;
 };
 
 typedef std::vector<JobTicket::Ptr> JobCollection;

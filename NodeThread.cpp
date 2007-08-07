@@ -17,7 +17,8 @@ NodeThread::NodeThread(std::string &host,
     host_(host),
     port_(port),
     s(new Server( host_, port_ )),
-    isAlive_(true)
+    isAlive_(true),
+    hasException_(false)
 {
 }
 
@@ -57,18 +58,18 @@ void NodeThread::run(){
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::runtime_error");
     log().log(ERROR, e.what());
-    isAlive_ = false;
+    isAlive_ = false; hasException_ = true;
     exception = ZThread::CountedPtr<std::exception> ( new std::runtime_error(e) );
   } catch (std::exception& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::exception");
     log().log(ERROR, e.what());
-    isAlive_ = false;
+    isAlive_ = false; hasException_ = true;
     exception = ZThread::CountedPtr<std::exception> ( new std::exception(e) );
   } catch (...) {
     // thread is stopped and
     log().log(ERROR, "_mgrThreag: Caught something else");
-    isAlive_ = false;
+    isAlive_ = false; hasException_ = false;
     return;
   }
   try {

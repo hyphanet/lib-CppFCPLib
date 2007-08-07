@@ -28,6 +28,7 @@ class NodeThread : public ZThread::Runnable {
   boost::shared_ptr<Server> s;
 
   bool isAlive_;
+  bool hasException_;
   ZThread::CountedPtr<std::exception> exception;
 
   std::map<std::string, JobTicket::Ptr > jobs[2]; // 0 -- local jobs, 1 -- global jobs
@@ -39,9 +40,6 @@ class NodeThread : public ZThread::Runnable {
   void doMessage(ServerMessage::Ptr message);
 public:
   void run();
-  bool isAlive() const {
-    return isAlive_;
-  }
   ZThread::CountedPtr<std::exception> getFailure() const {
     return exception;
   }

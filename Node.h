@@ -12,6 +12,7 @@
 #include "TQueue.h"
 #include "NodeThread.h"
 #include "AdditionalFields.h"
+#include "Exceptions.h"
 
 #include "sha256.h"
 
@@ -44,11 +45,17 @@ public:
   void shutdown();
 
   bool isAlive() const {
-    return nodeThread->isAlive();
+    return nodeThread->isAlive_;
   }
-
+  bool hasFailure() const {
+    return nodeThread->hasException_;
+  }
   std::exception getFailure() const {
-    return *nodeThread->getFailure();
+    if ( nodeThread->isAlive_ )
+      throw std::logic_error("There is no failure");
+    if (! nodeThread->hasException_ )
+      throw std::logic_error("Cannot retrieve the reason of a failure");
+    return *(nodeThread->getFailure());
   }
 
   const Message::Ptr getNodeHelloMessage() const;

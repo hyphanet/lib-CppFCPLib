@@ -5,7 +5,7 @@
 
 #include "NodeThread.h"
 #include "Log.h"
-
+#include "Node.h"
 
 using namespace FCPLib;
 using namespace ZThread;
@@ -54,36 +54,23 @@ void NodeThread::run(){
     log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
     log().log(ERROR, e.what());
     node->setIsAlive(false);
-    return;
   } catch (std::runtime_error& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::runtime_error");
     log().log(ERROR, e.what());
-    node->setIsAlive(false);
-    node->setFailure( std::auto_ptr<std::exception>( new std::runtime_error(e) ) );
+    node->setIsAlive( false );
+    node->setFailure( e.what() );
   } catch (std::exception& e) {
     // some error has occured, keep the thread so you can access the isAlive and getFailure
     log().log(ERROR, "_mgrThreag: Caught std::exception");
     log().log(ERROR, e.what());
-    node->setIsAlive(false);
-    node->setFailure( std::auto_ptr<std::exception>( new std::exception(e) ) );
+    node->setIsAlive( false );
+    node->setFailure( e.what() );
   } catch (...) {
-    // thread is stopped and
+    // thread is stopped and we don't know what has happend
     log().log(ERROR, "_mgrThreag: Caught something else");
     node->setIsAlive(false);
-    return;
-  }
-  try {
-    while (!Thread::interrupted()) {
-      // dummy loop, wait untill interrupt
-      Thread::sleep(1000);
-      Thread::yield();
-    }
-  } catch (ZThread::Synchronization_Exception& e) {
-    // thread was interupted, normal way to shutdown the thread
-    // this object will be destroyed
-    log().log(ERROR, "_mgrThread: Caught Synchronization_Exception");
-    return;
+    node->setFailure( "unknown error" );
   }
 }
 

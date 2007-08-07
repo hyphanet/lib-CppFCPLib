@@ -4,6 +4,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include "Utils.h"
+#include "Node.h"
 
 
 using namespace FCPLib;
@@ -35,8 +36,13 @@ void
 JobTicket::wait(unsigned int timeout)
 {
   if (!timeout){
-    while (!lock.tryAcquire(100))
+    while (!lock.tryAcquire(100)) {
+      if (! node->isAlive() ) {
+        if ( node->hasFailure() ) throw node->getFailure();
+        else throw FCPNodeFailure( "node thread is not alive" );
+      }
       ZThread::Thread::sleep(100);
+    }
     lock.release();
     return;
   }
@@ -44,6 +50,10 @@ JobTicket::wait(unsigned int timeout)
   unsigned int then = (unsigned int) time(0);
   unsigned int elapsed;
   while (!reqSentLock.tryAcquire(100)){
+    if (! node->isAlive() ) {
+      if ( node->hasFailure() ) throw node->getFailure();
+      else throw FCPNodeFailure( "node thread is not alive" );
+    }
     elapsed = (unsigned int) time(0) - then;
     if (elapsed < timeout){
       ZThread::Thread::sleep(1000);
@@ -57,6 +67,10 @@ JobTicket::wait(unsigned int timeout)
   }
   log().log(DEBUG, "wait:"+this->getCommandName()+":"+this->getId()+": job now dispatched");
   while (!lock.tryAcquire(100)){
+    if (! node->isAlive() ) {
+      if ( node->hasFailure() ) throw node->getFailure();
+      else throw FCPNodeFailure( "node thread is not alive" );
+    }
     elapsed = (unsigned int) time(0) - then;
     if (elapsed < timeout) {
       ZThread::Thread::sleep(2000);
@@ -78,7 +92,10 @@ JobTicket::waitTillReqSent(unsigned int timeout)
   unsigned int then = (unsigned int) time(0);
   unsigned int elapsed;
   while (!reqSentLock.tryAcquire(100)){
-
+    if (! node->isAlive() ) {
+      if ( node->hasFailure() ) throw node->getFailure();
+      else throw FCPNodeFailure( "node thread is not alive" );
+    }
     elapsed = (unsigned int) time(0) - then;
     if (elapsed < timeout){
       ZThread::Thread::sleep(1000);
@@ -119,11 +136,11 @@ JobTicket::putResult()
 }
 
 GetJob::Ptr
-GetJob::factory(std::string id, Message::Ptr cmd)
+GetJob::factory(Node *n, std::string id, Message::Ptr cmd)
 {
   log().log(NOISY, "Creating " + cmd->getHeader());
   Ptr ret( new GetJob() );
-  ret->init(id, cmd);
+  ret->init(n, id, cmd);
 
   return ret;
 }

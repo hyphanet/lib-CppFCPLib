@@ -18,6 +18,11 @@ public:
   ~FCPException() throw();
 };
 
+class FCPNodeFailure : public std::runtime_error {
+public:
+  FCPNodeFailure(std::string msg) : std::runtime_error(msg) {}
+};
+
 class FileError : public std::runtime_error {
   std::string path_;
 public:

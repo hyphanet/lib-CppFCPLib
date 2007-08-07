@@ -671,7 +671,7 @@ Node::getDisk(const std::string URI, const std::string filename, const std::stri
     m->setField("Filename", filename);
     if (fields.hasField("TempFilename")) m->setField("TempFilename", fields.getField("TempFilename"));
 
-    GetJob::Ptr job = GetJob::factory( m->getField("Identifier"), m );
+    GetJob::Ptr job = GetJob::factory( this, m->getField("Identifier"), m );
     job->setGlobal( global ).setPersistent( persistent );
     job->setReturnType( GetJob::Disk );
 
@@ -719,7 +719,7 @@ Node::fetchData(const std::string URI, const std::string id, const AdditionalFie
   if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   if (fields.hasField("AllowedMIMETypes")) m->setField("AllowedMIMETypes", fields.getField("AllowedMIMETypes"));
 
-  GetJob::Ptr job = GetJob::factory( m->getField("Identifier"), m );
+  GetJob::Ptr job = GetJob::factory( this, m->getField("Identifier"), m );
   job->setGlobal( global ).setPersistent( persistent );
   job->setReturnType( GetJob::None );
 
@@ -761,7 +761,7 @@ Node::getDirect(const std::string URI, const std::string id, std::ostream* strea
   if (fields.hasField("BinaryBlob")) m->setField("BinaryBlob", fields.getField("BinaryBlob"));
   if (fields.hasField("AllowedMIMETypes")) m->setField("AllowedMIMETypes", fields.getField("AllowedMIMETypes"));
 
-  GetJob::Ptr job = GetJob::factory( m->getField("Identifier"), m );
+  GetJob::Ptr job = GetJob::factory( this, m->getField("Identifier"), m );
   job->setGlobal( global ).setPersistent( persistent );
   job->setReturnType( GetJob::Direct ).setStream( stream );
 

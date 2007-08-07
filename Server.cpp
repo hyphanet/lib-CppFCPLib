@@ -48,9 +48,14 @@ std::string Server::readln(){
 }
 
 void Server::send(const std::string &s){
-  log().log(DEBUG, "Sending:\n"+s+"-----------------\n");
+  boost::system::error_code error;
 
-  boost::asio::write(*socket_, boost::asio::buffer(s));
+  log().log(DEBUG, "Sending:\n"+s+"-----------------\n");
+  if (!socket_->is_open())
+    throw std::runtime_error("Server::send :: socket is closed");
+  boost::asio::write(*socket_, boost::asio::buffer(s), boost::asio::transfer_all(), error );
+  if (error)
+    throw boost::system::system_error(error);
 }
 
 void Server::send(const Message::Ptr m)
@@ -61,7 +66,16 @@ void Server::send(const Message::Ptr m)
 }
 
 bool Server::dataAvailable(){
-  return socket_->available() != 0 || response.size() != 0;
+  boost::system::error_code error;
+  bool ret;
+
+  if (!socket_->is_open())
+    throw std::runtime_error("Server::dataAvailable :: socket is closed");
+  ret = socket_->available(error) != 0 || response.size() != 0;
+  if (error)
+    throw boost::system::system_error(error);
+
+  return ret;
 }
 
 void

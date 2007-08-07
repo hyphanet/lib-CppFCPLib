@@ -74,7 +74,12 @@ Message::getHeader() const
 void
 Message::toSocket(boost::asio::ip::tcp::socket& socket)
 {
-  boost::asio::write(socket, boost::asio::buffer(toString()));
+  boost::system::error_code error;
+  if (!socket.is_open())
+    throw std::runtime_error("Message::toSocket :: socket is closed");
+  boost::asio::write(socket, boost::asio::buffer(toString()), boost::asio::transfer_all(), error);
+  if (error)
+    throw boost::system::system_error(error);
 }
 
 void
@@ -99,15 +104,26 @@ DataMessage::toString() {
 void
 DataMessage::toSocket(boost::asio::ip::tcp::socket& socket)
 {
+  boost::system::error_code error;
   char buf[1024];
   int tmp = dataLength_;
-  boost::asio::write( socket, boost::asio::buffer(toString()) );
+
+  if (!socket.is_open())
+    throw std::runtime_error("DataMessage::toSocket :: socket is closed");
+  boost::asio::write( socket, boost::asio::buffer(toString()), boost::asio::transfer_all(), error );
+  if (error)
+    throw boost::system::system_error(error);
+
   while (tmp > 0) {
     int m = std::min<int>(tmp, 1024);
     stream_->read(buf, m);
     if (stream_->fail())
       throw std::runtime_error("Error while reading data stream.");
-    boost::asio::write( socket, boost::asio::buffer(buf, m) );
+    if (!socket.is_open())
+      throw std::runtime_error("DataMessage::toSocket :: socket is closed");
+    boost::asio::write( socket, boost::asio::buffer(buf, m), boost::asio::transfer_all(), error );
+    if (error)
+      throw boost::system::system_error(error);
     tmp -= m;
   }
 }

@@ -64,7 +64,7 @@ protected:
       _isFinished(false)
   {}
 
-  void init(std::string &id, Message::Ptr cmd);
+  void init(Node *n, std::string &id, Message::Ptr cmd);
 
   JobTicket& setKeep( bool x ) { keep = x; return *this; };
   JobTicket& setGlobal( bool x ) { global = x; return *this; };
@@ -133,7 +133,7 @@ private:
       stream(NULL)
   {}
 
-  static Ptr factory(std::string id, Message::Ptr cmd);
+  static Ptr factory(Node*n, std::string id, Message::Ptr cmd);
   GetJob& setStream( std::ostream *s ) { stream = s; return *this; }
   GetJob& setReturnType( ReturnType r ) { retType = r; return *this; }
 

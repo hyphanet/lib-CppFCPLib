@@ -18,6 +18,8 @@
 
 namespace FCPLib {
 class Node {
+  friend class NodeThread;
+
   std::string name;
   ZThread::CountedPtr< JobTicketQueue > clientReqQueue;
   NodeThread* nodeThread;
@@ -33,16 +35,16 @@ class Node {
   ZThread::Mutex access;
 
   bool isAlive_, hasException_;
-  std::auto_ptr<std::exception> failure;
+  std::auto_ptr<FCPNodeFailure> failure;
 
   void setIsAlive(bool x) {
     ZThread::Guard<ZThread::Mutex> g(access);
     isAlive_ = x;
   }
 
-  void setFailure(std::auto_ptr<std::exception> e) {
+  void setFailure(std::string e) {
     ZThread::Guard<ZThread::Mutex> g(access);
-    failure = e;
+    failure = std::auto_ptr<FCPNodeFailure>( new FCPNodeFailure( e ) );
     hasException_ = true;
   }
 
@@ -60,21 +62,21 @@ public:
 
   void shutdown();
 
-  bool isAlive() const {
+  bool isAlive() {
     ZThread::Guard<ZThread::Mutex> g(access);
     return isAlive_;
   }
-  bool hasFailure() const {
+  bool hasFailure() {
     ZThread::Guard<ZThread::Mutex> g(access);
     return hasException_;
   }
-  std::auto_ptr<std::exception> getFailure() const {
+  FCPNodeFailure getFailure() {
     ZThread::Guard<ZThread::Mutex> g(access);
     if ( isAlive_ )
       throw std::logic_error("There is no failure");
     if (! hasException_ )
       throw std::logic_error("Cannot retrieve the reason of a failure");
-    return failure;
+    return *failure;
   }
 
   const Message::Ptr getNodeHelloMessage() const;

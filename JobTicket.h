@@ -138,7 +138,7 @@ private:
   GetJob& setReturnType( ReturnType r ) { retType = r; return *this; }
 
 public:
-  ~GetJob() { if (stream != NULL) delete stream; }
+  ~GetJob() {}
   std::ostream& getStream() { return *stream; }
   ReturnType getReturnType() const { return retType; }
 

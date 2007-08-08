@@ -230,18 +230,20 @@ AllDataMessage::read(boost::shared_ptr<Server> s)
 bool
 AllDataMessage::isLast(const JobTicketPtr job) const
 {
+  log().log(NOISY, "AllDataMessage::isLast: top");
   GetJob::Ptr job_ = boost::dynamic_pointer_cast<GetJob, JobTicket>( job );
 
   std::ostream& stream = job_->getStream();
   char buf[1024];
 
-  int tmp = bytesToRead;
-  while (tmp > 0) {
-    int m = std::min<int>(tmp, 1024);
-    server->read(boost::asio::buffer(buf, m));
+  std::size_t bytes_available = bytesToRead;
+  log().log(NOISY, "bytesToRead = " + boost::lexical_cast<std::string>( bytes_available ));
+  while (bytes_available > 0) {
+    std::size_t m = std::min<std::size_t>(bytes_available, 1024);
+    server->read(buf, m);
     stream.write(buf, m);
-    tmp -= m;
-    log().log(DEBUG, "NODE: read "+ boost::lexical_cast<std::string>( m ) + " bytes of data, " + boost::lexical_cast<std::string>( tmp ) +  " still left");
+    bytes_available -= m;
+    log().log(DEBUG, "NODE: read "+ boost::lexical_cast<std::string>( m ) + " bytes of data, " + boost::lexical_cast<std::string>( bytes_available ) +  " still left");
   }
   stream.flush();
 

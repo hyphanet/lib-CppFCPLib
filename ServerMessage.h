@@ -98,7 +98,7 @@ class AllDataMessage : public ServerMessage {
   friend class ServerMessage;
 
   boost::shared_ptr<Server> server;
-  int bytesToRead;
+  std::size_t bytesToRead;
 
   void read(boost::shared_ptr<Server> s);
 

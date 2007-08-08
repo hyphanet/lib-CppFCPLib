@@ -39,6 +39,10 @@ class NodeThread : public ZThread::Runnable {
   void doMessage(ServerMessage::Ptr message);
 public:
   void run();
+  ~NodeThread() {
+    jobs[0].clear();
+    jobs[1].clear();
+  }
 };
 
 }

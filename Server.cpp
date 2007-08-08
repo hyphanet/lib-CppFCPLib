@@ -79,7 +79,16 @@ bool Server::dataAvailable(){
 }
 
 void
-Server::read(boost::asio::mutable_buffers_1 buf)
+Server::read(char *buf, std::size_t len)
 {
-  boost::asio::read(*socket_, buf);
+  log().log(NOISY, "Server::read: top");
+  boost::system::error_code error;
+
+  while (response.size() < len) {
+    log().log(NOISY, "bytes read: " + boost::lexical_cast<std::string>(response.size()));
+    response.commit(socket_->read_some(response.prepare(len), error));
+    if (error)
+      throw boost::system::system_error(error);
+  }
+  response_stream.read(buf, len);
 }

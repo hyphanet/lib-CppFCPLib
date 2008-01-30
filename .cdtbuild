@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?fileVersion 3.1.0?>
+
+<ManagedProjectBuildInfo>
+<project id="CppFCPLib.cdt.managedbuild.target.gnu.so.483056653" name="Shared Library (Gnu)" projectType="cdt.managedbuild.target.gnu.so">
+<configuration artifactExtension="so" artifactName="CppFCPLib" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.MakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.config.gnu.so.debug.637839784" name="Debug" parent="cdt.managedbuild.config.gnu.so.debug">
+<toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.957514496" name="GCC Tool Chain" superClass="cdt.managedbuild.toolchain.gnu.so.debug">
+<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1885320407" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug">
+<option id="gnu.cpp.compiler.option.include.paths.31924631" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+<listOptionValue builtIn="false" value="/usr/local/include/boost-1_34_1"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CppFCPLib}&quot;"/>
+<listOptionValue builtIn="false" value="/usr/local/include/zthread"/>
+</option>
+<option id="gnu.cpp.compiler.option.other.other.47488542" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -fpermissive -fPIC" valueType="string"/>
+</tool>
+<tool id="cdt.managedbuild.tool.gnu.c.compiler.so.debug.952262619" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.debug"/>
+<tool id="cdt.managedbuild.tool.gnu.c.linker.so.debug.1840163836" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.debug"/>
+<tool id="cdt.managedbuild.tool.gnu.cpp.linker.so.debug.1004264066" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.so.debug">
+<option id="gnu.cpp.link.option.libs.1733389263" superClass="gnu.cpp.link.option.libs" valueType="libs">
+<listOptionValue builtIn="false" value="boost_filesystem-gcc41-mt"/>
+<listOptionValue builtIn="false" value="ZThread"/>
+<listOptionValue builtIn="false" value="boost_system-gcc41-mt"/>
+</option>
+<option id="gnu.cpp.link.option.paths.1102360677" superClass="gnu.cpp.link.option.paths" valueType="stringList">
+<listOptionValue builtIn="false" value="/usr/local/lib"/>
+</option>
+</tool>
+<tool id="cdt.managedbuild.tool.gnu.assembler.so.debug.405715514" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.debug"/>
+<macros/>
+</toolChain>
+</configuration>
+<configuration artifactExtension="so" artifactName="CppFCPLib" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.cdt.core.MakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser" id="cdt.managedbuild.config.gnu.so.release.2107971253" name="Release" parent="cdt.managedbuild.config.gnu.so.release">
+<toolChain id="cdt.managedbuild.toolchain.gnu.so.release.801364200" name="GCC Tool Chain" superClass="cdt.managedbuild.toolchain.gnu.so.release">
+<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.so.release.2066296911" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.release"/>
+<tool id="cdt.managedbuild.tool.gnu.c.compiler.so.release.1681204840" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.release"/>
+<tool id="cdt.managedbuild.tool.gnu.c.linker.so.release.540761224" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.release"/>
+<tool id="cdt.managedbuild.tool.gnu.cpp.linker.so.release.45143311" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.so.release"/>
+<tool id="cdt.managedbuild.tool.gnu.assembler.so.release.413670396" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.so.release"/>
+</toolChain>
+</configuration>
+<macros/>
+</project>
+</ManagedProjectBuildInfo>
